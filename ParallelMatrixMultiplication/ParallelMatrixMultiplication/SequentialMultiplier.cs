@@ -1,7 +1,15 @@
-﻿namespace ParallelMatrixMultiplication;
+﻿// <copyright file="SequentialMultiplier.cs" company="IlyaSotnikov">
+// Copyright (c) IlyaSotnikov. All rights reserved.
+// </copyright>
 
+namespace ParallelMatrixMultiplication;
+
+/// <summary>
+/// The class for sequential multiplier.
+/// </summary>
 public class SequentialMultiplier : IMatrixMultiplier
 {
+    /// <inheritdoc/>
     public int[][] Multiply(int[][] matrix1, int[][] matrix2)
     {
         if (matrix1.Length != matrix2[0].Length)

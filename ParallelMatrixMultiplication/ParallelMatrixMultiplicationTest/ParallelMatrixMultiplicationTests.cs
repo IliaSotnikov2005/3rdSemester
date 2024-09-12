@@ -1,9 +1,20 @@
-using ParallelMatrixMultiplication;
+// <copyright file="ParallelMatrixMultiplicationTests.cs" company="IlyaSotnikov">
+// Copyright (c) IlyaSotnikov. All rights reserved.
+// </copyright>
 
 namespace ParallelMatrixMultiplicationTest;
 
+using ParallelMatrixMultiplication;
+
+/// <summary>
+/// Tests for matrix multiplication.
+/// </summary>
 public class ParallelMatrixMultiplicationTests
 {
+    /// <summary>
+    /// Ñhecks that the multiplication is performed correctly.
+    /// </summary>
+    /// <param name="matrixMultiplier">Type of myltiplier.</param>
     [TestCaseSource(nameof(ParallelMultiplicationTestData))]
     public void MatrixMultiplication_ReturnsCorrect(IMatrixMultiplier matrixMultiplier)
     {
@@ -18,6 +29,10 @@ public class ParallelMatrixMultiplicationTests
         Assert.That(result, Is.EqualTo(expected));
     }
 
+    /// <summary>
+    /// Ñhecks that throws exception if the number of rows and columns is different.
+    /// </summary>
+    /// <param name="matrixMultiplier">Type of myltiplier.</param>
     [TestCaseSource(nameof(ParallelMultiplicationTestData))]
     public void Multiplication_MismatchRowsColumns_ThrowsException(IMatrixMultiplier matrixMultiplier)
     {

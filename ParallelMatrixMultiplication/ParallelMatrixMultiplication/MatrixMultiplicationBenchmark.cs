@@ -1,35 +1,30 @@
-﻿using OxyPlot.Series;
-using OxyPlot;
-using System.Diagnostics;
-using OxyPlot.ImageSharp;
-using OxyPlot.Axes;
-using OxyPlot.Legends;
+﻿// <copyright file="MatrixMultiplicationBenchmark.cs" company="IlyaSotnikov">
+// Copyright (c) IlyaSotnikov. All rights reserved.
+// </copyright>
 
 namespace ParallelMatrixMultiplication;
 
+using System.Diagnostics;
+using OxyPlot;
+using OxyPlot.Axes;
+using OxyPlot.ImageSharp;
+using OxyPlot.Legends;
+using OxyPlot.Series;
+
+/// <summary>
+/// Benchmark for parallel and sequence matrix multiplication.
+/// </summary>
 public static class MatrixMultiplicationBenchmark
 {
     private static List<double> parallelTimesMeans = [];
     private static List<double> sequentialTimesMeans = [];
     private static List<int> sizes = [];
 
-    private static int[][] GenerateMatrix(int size)
-    {
-        var random = new Random();
-        var matrix = new int[size][];
-
-        for (int i = 0; i < size; i++)
-        {
-            matrix[i] = new int[size];
-            for (int j = 0; j < size; j++)
-            {
-                matrix[i][j] = random.Next(1, 10);
-            }
-        }
-
-        return matrix;
-    }
-
+    /// <summary>
+    /// The method to run the benchmark.
+    /// </summary>
+    /// <param name="size">Size of matrices.</param>
+    /// <param name="runs">A number of launches.</param>
     public static void Benchmark(int size, int runs)
     {
         int[][] matrix1 = GenerateMatrix(size);
@@ -67,6 +62,64 @@ public static class MatrixMultiplicationBenchmark
         Console.WriteLine($"Size: {size}, Parallel Mean: {parallelMean} ms, Parallel StdDev: {parallelStdDev} ms\n");
     }
 
+    /// <summary>
+    /// The method of plotting based on the results.
+    /// </summary>
+    public static void MakeGraph()
+    {
+        var plotModel = new PlotModel
+        {
+            Title = "Performance graph",
+            Background = OxyColor.FromRgb(255, 255, 255),
+        };
+        plotModel.Legends.Add(new Legend { LegendTitle = "Легенда", LegendPosition = LegendPosition.BottomRight });
+        plotModel.IsLegendVisible = true;
+
+        plotModel.Axes.Add(new LinearAxis { Position = AxisPosition.Bottom, Title = "Matrix sizes" });
+        plotModel.Axes.Add(new LinearAxis { Position = AxisPosition.Left, Title = "Time (sec)" });
+
+        var sequentialSeries = new LineSeries { Title = "Sequential multiplication", MarkerType = MarkerType.Square };
+        for (int i = 0; i < sizes.Count; ++i)
+        {
+            sequentialSeries.Points.Add(new DataPoint(sizes[i], sequentialTimesMeans[i]));
+        }
+
+        plotModel.Series.Add(sequentialSeries);
+
+        var parallelSeries = new LineSeries { Title = "Parallel multiplication", MarkerType = MarkerType.Circle };
+        for (int i = 0; i < sizes.Count; ++i)
+        {
+            parallelSeries.Points.Add(new DataPoint(sizes[i], parallelTimesMeans[i]));
+        }
+
+        plotModel.Series.Add(parallelSeries);
+
+        var pngExporter = new PngExporter(800, 600, 96);
+        using (var stream = File.Create("graph.png"))
+        {
+            pngExporter.Export(plotModel, stream);
+        }
+
+        Console.WriteLine("The graph is saved as graph.png");
+    }
+
+    private static int[][] GenerateMatrix(int size)
+    {
+        var random = new Random();
+        var matrix = new int[size][];
+
+        for (int i = 0; i < size; i++)
+        {
+            matrix[i] = new int[size];
+            for (int j = 0; j < size; j++)
+            {
+                matrix[i][j] = random.Next(1, 10);
+            }
+        }
+
+        return matrix;
+    }
+
     private static double CalculateMean(double[] times)
     {
         double sum = 0;
@@ -74,6 +127,7 @@ public static class MatrixMultiplicationBenchmark
         {
             sum += time;
         }
+
         return sum / times.Length;
     }
 
@@ -84,42 +138,7 @@ public static class MatrixMultiplicationBenchmark
         {
             sumOfSquares += Math.Pow(time - mean, 2);
         }
+
         return Math.Sqrt(sumOfSquares / times.Length);
-    }
-
-    public static void MakeGraph()
-    {
-        var plotModel = new PlotModel
-        {
-            Title = "График производительности",
-            Background = OxyColor.FromRgb(255, 255, 255)
-        };
-        plotModel.Legends.Add(new Legend { LegendTitle = "Легенда", LegendPosition = LegendPosition.BottomRight });
-        plotModel.IsLegendVisible = true;
-
-        plotModel.Axes.Add(new LinearAxis { Position = AxisPosition.Bottom, Title = "Размеры матриц" });
-        plotModel.Axes.Add(new LinearAxis { Position = AxisPosition.Left, Title = "Время (сек)" });
-
-        var sequentialSeries = new LineSeries { Title = "Последовательное умножение", MarkerType = MarkerType.Square };
-        for (int i = 0; i < sizes.Count; ++i)
-        {
-            sequentialSeries.Points.Add(new DataPoint(sizes[i], sequentialTimesMeans[i]));
-        }
-        plotModel.Series.Add(sequentialSeries);
-
-        var parallelSeries = new LineSeries { Title = "Параллельное умножение", MarkerType = MarkerType.Circle };
-        for (int i = 0; i < sizes.Count; ++i)
-        {
-            parallelSeries.Points.Add(new DataPoint(sizes[i], parallelTimesMeans[i]));
-        }
-        plotModel.Series.Add(parallelSeries);
-
-        var pngExporter = new PngExporter(800, 600, 96);
-        using (var stream = File.Create("graph.png"))
-        {
-            pngExporter.Export(plotModel, stream);
-        }
-
-        Console.WriteLine("График сохранен как graph.png");
     }
 }
