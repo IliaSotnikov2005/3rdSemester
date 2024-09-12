@@ -2,7 +2,6 @@
 using OxyPlot;
 using System.Diagnostics;
 using OxyPlot.ImageSharp;
-using System.Text;
 using OxyPlot.Axes;
 using OxyPlot.Legends;
 
@@ -39,15 +38,18 @@ public static class MatrixMultiplicationBenchmark
         double[] sequentialTimes = new double[runs];
         double[] parallelTimes = new double[runs];
 
+        var sequentialMultiplier = new SequentialMultiplier();
+        var parallerMultiplier = new ParallelMultiplier();
+
         for (int i = 0; i < runs; ++i)
         {
             var stopwatch = Stopwatch.StartNew();
-            SequentialMultiplication.Multiply(matrix1, matrix2);
+            sequentialMultiplier.Multiply(matrix1, matrix2);
             stopwatch.Stop();
             sequentialTimes[i] = stopwatch.Elapsed.TotalMilliseconds;
 
             stopwatch.Restart();
-            ParallelMultiplication.Multiply(matrix1, matrix2);
+            parallerMultiplier.Multiply(matrix1, matrix2);
             stopwatch.Stop();
             parallelTimes[i] = stopwatch.Elapsed.TotalMilliseconds;
         }

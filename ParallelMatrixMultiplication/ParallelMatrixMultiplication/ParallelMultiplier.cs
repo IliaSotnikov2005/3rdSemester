@@ -1,16 +1,17 @@
 ﻿namespace ParallelMatrixMultiplication;
-public static class ParallelMultiplication
+public class ParallelMultiplier : IMatrixMultiplier
 {
-    private static int[][] result = [];
-    private static int[][] matrix1 = [];
-    private static int[][] matrix2 = [];
-    private static int columns = 0;
-    private static int rows = 0;
+    private int[][] result = [];
+    private int[][] matrix1 = [];
+    private int[][] matrix2 = [];
+    private int columns = 0;
+    private int rows = 0;
 
-    private static void MultiplyRowByColumn(int rowIndex)
+    private void MultiplyRowByColumn(int rowIndex)
     {
         for (int column = 0; column < columns; ++column)
         {
+            result[rowIndex][column] = 0;
             for (int i = 0; i < matrix1[0].Length; ++i)
             {
                 result[rowIndex][column] += matrix1[rowIndex][i] * matrix2[i][column];
@@ -18,7 +19,7 @@ public static class ParallelMultiplication
         }
     }
 
-    public static int[][] Multiply(int[][] InputMatrix1, int[][] InputMatrix2)
+    public int[][] Multiply(int[][] InputMatrix1, int[][] InputMatrix2)
     {
         if (InputMatrix1.Length != InputMatrix2[0].Length)
         {

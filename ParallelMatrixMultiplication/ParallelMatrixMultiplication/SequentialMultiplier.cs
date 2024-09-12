@@ -1,8 +1,8 @@
 ﻿namespace ParallelMatrixMultiplication;
 
-public static class SequentialMultiplication
+public class SequentialMultiplier : IMatrixMultiplier
 {
-    public static int[][] Multiply(int[][] matrix1, int[][] matrix2)
+    public int[][] Multiply(int[][] matrix1, int[][] matrix2)
     {
         if (matrix1.Length != matrix2[0].Length)
         {

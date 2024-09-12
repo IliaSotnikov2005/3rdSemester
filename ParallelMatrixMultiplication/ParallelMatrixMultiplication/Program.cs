@@ -1,5 +1,4 @@
-﻿using ParallelMatrixMultiplication;
-
+﻿namespace ParallelMatrixMultiplication;
 
 public class Program
 {
@@ -70,7 +69,8 @@ public class Program
                     int[][] matrix1 = ExtractMatrix(filename1);
                     int[][] matrix2 = ExtractMatrix(filename2);
 
-                    int[][] result = ParallelMultiplication.Multiply(matrix1, matrix2);
+                    var parallelMultiplier = new ParallelMultiplier();
+                    int[][] result = parallelMultiplier.Multiply(matrix1, matrix2);
 
                     EnterMatrix(result);
                 }
@@ -88,7 +88,7 @@ public class Program
                 break;
 
             default:
-                Console.WriteLine("Unknown command.\nUse - m < filename > to multiply the matrices\n-b to run the benchmark.");
+                Console.WriteLine("Unknown command.\nUse -m < filename > to multiply the matrices\n-b to run the benchmark.");
                 break;
         }
     }
