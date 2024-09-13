@@ -72,7 +72,7 @@ public static class MatrixMultiplicationBenchmark
             Title = "Performance graph",
             Background = OxyColor.FromRgb(255, 255, 255),
         };
-        plotModel.Legends.Add(new Legend { LegendTitle = "Легенда", LegendPosition = LegendPosition.BottomRight });
+        plotModel.Legends.Add(new Legend { LegendTitle = "Legend", LegendPosition = LegendPosition.BottomRight });
         plotModel.IsLegendVisible = true;
 
         plotModel.Axes.Add(new LinearAxis { Position = AxisPosition.Bottom, Title = "Matrix sizes" });
@@ -108,10 +108,10 @@ public static class MatrixMultiplicationBenchmark
         var random = new Random();
         var matrix = new int[size][];
 
-        for (int i = 0; i < size; i++)
+        for (int i = 0; i < size; ++i)
         {
             matrix[i] = new int[size];
-            for (int j = 0; j < size; j++)
+            for (int j = 0; j < size; ++j)
             {
                 matrix[i][j] = random.Next(1, 10);
             }

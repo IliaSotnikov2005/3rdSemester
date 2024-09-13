@@ -17,20 +17,20 @@ public class Program
     {
         if (args.Length == 0)
         {
-            Console.WriteLine("There are no arguments.\nUse -help for help\n-m <filename> to multiply the matrices\n-b to run the benchmark.");
+            Console.WriteLine("There are no arguments.\nUse -help for help\n-m <filename> <filename> to multiply the matrices\n-b to run the benchmark.");
             return;
         }
 
         switch (args[0])
         {
             case "-help":
-                Console.WriteLine("Use -m <filename> to multiply the matrices\n-b to run the benchmark.");
+                Console.WriteLine("Use -m <filename> <filename> to multiply the matrices\n-b to run the benchmark.");
                 break;
 
             case "-m":
                 if (args.Length < 3)
                 {
-                    Console.WriteLine("Enter filename for multiplication.");
+                    Console.WriteLine("Enter filenames for multiplication.");
                     return;
                 }
 
@@ -61,7 +61,7 @@ public class Program
                 break;
 
             default:
-                Console.WriteLine("Unknown command.\nUse -m < filename > to multiply the matrices\n-b to run the benchmark.");
+                Console.WriteLine("Unknown command.\nUse -m <filename> <filename> to multiply the matrices\n-b to run the benchmark.");
                 break;
         }
     }
