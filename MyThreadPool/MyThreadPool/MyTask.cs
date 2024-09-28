@@ -1,24 +1,40 @@
 namespace MyThreadPool;
 
-public class MyTask<TResult>(Func<TResult> function) : IMyTask<TResult>
+public class MyTask<TResult>(Func<TResult> function, CancellationToken token) : IMyTask<TResult>
 {
     private readonly Func<TResult> function = function;
-    private TResult result;
-    private bool isCompleted = false;
-    private readonly object lockObject = new object();
+    private TResult? result;
+    private readonly object lockObject = new();
 
-    public bool IsCompleted => isCompleted;
-    
+    private readonly CancellationToken token = token;
+    private Exception? thrownException = null;
+
+    public bool IsCompleted { get; private set; } = false;
+
     public void Start()
     {
         lock (lockObject)
         {
-            if (!isCompleted)
+            if (token.IsCancellationRequested)
             {
-                result = function();
-                this.isCompleted = true;
+                return;
+            }
+
+            if (!IsCompleted)
+            {
+                try
+                {
+                    result = function();
+                    IsCompleted = true;
+                }
+                catch (Exception ex)
+                {
+                    thrownException = ex;
+                }
             }
         }
+
+        Monitor.PulseAll(lockObject);
     }
 
     public TResult Result
@@ -27,18 +43,31 @@ public class MyTask<TResult>(Func<TResult> function) : IMyTask<TResult>
         {
             lock (lockObject)
             {
-                if (isCompleted)
+                while (!IsCompleted && thrownException == null)
                 {
-                    return result;
+                    if (token.IsCancellationRequested)
+                    {
+                        throw new TaskCanceledException();
+                    }
+
+                    Monitor.Wait(lockObject);
                 }
 
-                throw new InvalidOperationException("Task is not completed yet");
+                if (this.thrownException != null)
+                {
+                    throw new AggregateException("Task failed.", this.thrownException);
+                }
+
+                ArgumentNullException.ThrowIfNull(this.result);
+                return result;
             }
         }
     }
 
-    public TNewResult ContinueWith<TNewResult>(Func<TResult, TNewResult> continuationFunction)
+    IMyTask<TNewResult> IMyTask<TResult>.ContinueWith<TNewResult>(Func<TResult, TNewResult> nextTask)
     {
-        throw new NotImplementedException();
+        Task task = new Task(() => nextTask(Result), token);
+
+        return new MyTask<TNewResult>(() => nextTask(Result), token);
     }
 }

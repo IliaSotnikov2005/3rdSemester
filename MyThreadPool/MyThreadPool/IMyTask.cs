@@ -6,6 +6,6 @@ public interface IMyTask<TResult>
 
     public TResult Result { get; }
 
-    public TNewResult ContinueWith<TNewResult>(Func<TResult, TNewResult> continuationFunction);
+    public IMyTask<TNewResult> ContinueWith<TNewResult>(Func<TResult, TNewResult> nextTask);
 
 }

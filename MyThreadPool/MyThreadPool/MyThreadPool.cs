@@ -3,44 +3,76 @@ namespace MyThreadPool;
 public class MyThreadPool
 {
     private readonly Thread[] threads;
-    private readonly Queue<IMyTask<object>> tasksQueue = new ();
-    private readonly object queueLock = new object();
-    private bool isShutdown = false;
+    private readonly Queue<Action> tasksQueue = new();
+    private readonly CancellationTokenSource cancellation = new();
 
     public MyThreadPool(int numberOfThreads)
     {
+        if (numberOfThreads <= 0)
+        {
+            throw new ArgumentException("Number of threads must be positive", nameof(numberOfThreads));
+        }
+
         threads = new Thread[numberOfThreads];
 
         for (int i = 0; i < numberOfThreads; ++i)
         {
-            var thread = new Thread(Work);
-            threads[i] = thread;
-            thread.Start();
+            threads[i] = new Thread(PerformTasks);
+            threads[i].Start();
         }
     }
 
-    private void Work()
+    public IMyTask<TResult> Submit<TResult>(Func<TResult> function)
     {
-        while (true)
+        MyTask<TResult> task = new(function, cancellation.Token);
+        this.Enqueue(() => task.Start());
+        // Сделать чтобы таски передавались в очередь
+        return task;
+    }
+
+    public void Shutdown()
+    {
+        cancellation.Cancel();
+
+        foreach (var thread in threads)
         {
-            MyTask<object> taskToStart = null;
+            thread.Join();
+        }
 
-            //taskAvailable.WaitOne();
+        cancellation.Dispose();
+    }
 
-            lock (queueLock)
+    public void Enqueue(Action task)
+    {
+        lock (tasksQueue)
+        {
+            tasksQueue.Enqueue(task);
+        }
+
+        Monitor.Pulse(tasksQueue);
+    }
+
+    private void PerformTasks()
+    {
+        while (!cancellation.IsCancellationRequested || tasksQueue.Count > 0)
+        {
+            Action task;
+            lock (tasksQueue)
             {
-                if (tasksQueue.Count > 0)
+                while (tasksQueue.Count == 0)
                 {
-                    taskToStart = (MyTask<object>?)tasksQueue.Dequeue();
+                    if (this.cancellation.IsCancellationRequested)
+                    {
+                        return;
+                    }
+
+                    Monitor.Wait(tasksQueue);
                 }
 
-                else if (isShutdown)
-                {
-                    break;
-                }
+                task = tasksQueue.Dequeue();
             }
 
-            taskToStart?.Start();
+            task();
         }
     }
 }
