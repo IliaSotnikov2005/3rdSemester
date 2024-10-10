@@ -5,7 +5,6 @@ public class MyThreadPool2
     private readonly Thread[] threads;
     private readonly Queue<Action> tasksQueue = new();
     private readonly CancellationTokenSource cancellationSource = new();
-    private readonly AutoResetEvent queueAccess = new(true);
     private AutoResetEvent gettingStarted = new(false);
 
     public MyThreadPool2(int numberOfThreads)
@@ -33,9 +32,10 @@ public class MyThreadPool2
 
         var newTask = new MyTask<TResult>(function, this);
 
-        queueAccess.WaitOne();
-        tasksQueue.Enqueue(newTask.Start);
-        queueAccess.Set();
+        lock (tasksQueue)
+        {
+            tasksQueue.Enqueue(newTask.Start);
+        }
 
         gettingStarted.Set();
 
@@ -61,29 +61,31 @@ public class MyThreadPool2
         while (!cancellationToken.IsCancellationRequested)
         {
             gettingStarted.WaitOne();
-            queueAccess.WaitOne();
-            if (tasksQueue.Count == 0)
-            {
-                queueAccess.Set();
-                continue;
-            }
+            Action? task = null;
 
-            Action task = tasksQueue.Dequeue();
-            queueAccess.Set();
+            lock (tasksQueue)
+            {
+                if (tasksQueue.Count == 0)
+                {
+                    Monitor.PulseAll(tasksQueue);
+                    continue;
+                }
+
+                task = tasksQueue.Dequeue();
+            }
 
             task();
 
             gettingStarted.Set();
         }
-
-        queueAccess.Set();
     }
 
     private void AddContinuingTask(Action taskStartAction)
     {
-        queueAccess.WaitOne();
-        tasksQueue.Enqueue(taskStartAction);
-        queueAccess.Set();
+        lock (tasksQueue)
+        {
+            tasksQueue.Enqueue(taskStartAction);
+        }
 
         gettingStarted.Set();
     }
@@ -95,7 +97,7 @@ public class MyThreadPool2
         private TResult? result;
         private Exception? thrownException = null;
         private Action? continuingTaskStartAction = null;
-        private ManualResetEvent ResultReadiness = new (false);
+        private ManualResetEvent ResultReadiness = new(false);
 
         public bool IsCompleted { get; private set; } = false;
 
@@ -130,12 +132,12 @@ public class MyThreadPool2
             get
             {
                 ResultReadiness.WaitOne();
-                
+
                 if (thrownException != null)
                 {
                     throw new AggregateException("Task failed.", thrownException);
                 }
-                
+
                 if (result == null)
                 {
                     throw new ArgumentException("Function does not return a result.");

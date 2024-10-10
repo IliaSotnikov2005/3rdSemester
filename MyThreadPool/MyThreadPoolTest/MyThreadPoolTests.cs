@@ -112,6 +112,32 @@ public class Tests
         AssertBlock(task, 1234);
     }
 
+    [Test]
+    public static void Test_ManyContinueWith_ReturnsCorrect()
+    {
+        var threadPool = new MyThreadPool2(2);
+        var task = threadPool.Submit(() => "12" + "34").ContinueWith((number) => int.Parse(number.ToArray())).ContinueWith((number) => number * 2);
+        AssertBlock(task, 2468);
+    }
+
+    [Test]
+    public static void Test_Shutdown_AllTasksComplete()
+    {
+        var threadPool = new MyThreadPool2(2);
+        var flag = false;
+
+        threadPool.Submit(() =>
+        {
+            Thread.Sleep(500);
+            Volatile.Write(ref flag, true);
+            return 0;
+        });
+
+        threadPool.Shutdown();
+
+        Assert.That(flag, Is.True);
+    }
+
     private static void AssertBlock<T>(IMyTask<T> task, T expected)
     {
         Assert.That(task.Result, Is.EqualTo(expected));

@@ -1,6 +1,3 @@
-using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
-
 namespace MyThreadPool;
 
 public class MyThreadPool
@@ -8,8 +5,8 @@ public class MyThreadPool
     private readonly Thread[] threads;
     private readonly Queue<Action> tasksQueue = new();
     private readonly CancellationTokenSource cancellationSource = new();
-    private readonly AutoResetEvent gettingStarted = new(false);
     private readonly AutoResetEvent queueAccess = new(true);
+    private AutoResetEvent gettingStarted = new(false);
 
     public MyThreadPool(int numberOfThreads)
     {
@@ -22,52 +19,54 @@ public class MyThreadPool
 
         for (int i = 0; i < numberOfThreads; ++i)
         {
-            threads[i] = new Thread(PerformTasks);
+            threads[i] = new Thread(() => PerformTasks(cancellationSource.Token));
             threads[i].Start();
         }
     }
 
     public IMyTask<TResult> Submit<TResult>(Func<TResult> function)
     {
-        var newTask = new MyTask<TResult>(function, this, cancellationSource.Token);
+        if (cancellationSource.IsCancellationRequested)
+        {
+            throw new OperationCanceledException("The threadpool was shutted down.", cancellationSource.Token);
+        }
+
+        var newTask = new MyTask<TResult>(function, this);
+
         queueAccess.WaitOne();
-
         tasksQueue.Enqueue(newTask.Start);
-        gettingStarted.Set();
-
         queueAccess.Set();
+
+        gettingStarted.Set();
 
         return newTask;
     }
 
-    private void ContinuousSubmit(Action task)
-    {
-        queueAccess.WaitOne();
-
-        tasksQueue.Enqueue(task);
-        gettingStarted.Set();
-        
-        queueAccess.Set();
-    }
-
     public void Shutdown()
     {
-        cancellationSource.Cancel();
+        if (cancellationSource.IsCancellationRequested)
+        {
+            return;
+        }
 
+        this.cancellationSource.Cancel();
         foreach (var thread in threads)
         {
             thread.Join();
         }
-
-        cancellationSource.Dispose();
     }
 
-    private void PerformTasks()
+    private void PerformTasks(CancellationToken cancellationToken)
     {
-        while (!this.cancellationSource.IsCancellationRequested)
+        while (!cancellationToken.IsCancellationRequested)
         {
             gettingStarted.WaitOne();
             queueAccess.WaitOne();
+            if (tasksQueue.Count == 0)
+            {
+                queueAccess.Set();
+                continue;
+            }
 
             Action task = tasksQueue.Dequeue();
             queueAccess.Set();
@@ -76,38 +75,53 @@ public class MyThreadPool
 
             gettingStarted.Set();
         }
+
+        queueAccess.Set();
     }
 
-    public class MyTask<TResult>(Func<TResult> function, MyThreadPool threadPool, CancellationToken token) : IMyTask<TResult>
+    private void AddContinuingTask(Action taskStartAction)
+    {
+        queueAccess.WaitOne();
+        tasksQueue.Enqueue(taskStartAction);
+        queueAccess.Set();
+
+        gettingStarted.Set();
+    }
+
+    public class MyTask<TResult>(Func<TResult> function, MyThreadPool threadPool) : IMyTask<TResult>
     {
         private readonly MyThreadPool threadPool = threadPool;
         private readonly Func<TResult> function = function;
         private TResult? result;
-        private readonly AutoResetEvent resultAccess = new (false);
-        private readonly CancellationToken token = token;
         private Exception? thrownException = null;
+        private Action? continuingTaskStartAction = null;
+        private ManualResetEvent ResultReadiness = new (false);
 
         public bool IsCompleted { get; private set; } = false;
 
         public void Start()
         {
-            if (token.IsCancellationRequested)
+            if (IsCompleted)
             {
                 return;
             }
 
-            if (!IsCompleted)
+            try
             {
-                try
-                {
-                    result = function();
-                    IsCompleted = true;
-                    resultAccess.Set();
-                }
-                catch (Exception ex)
-                {
-                    thrownException = ex;
-                }
+
+                result = function();
+                IsCompleted = true;
+            }
+            catch (Exception ex)
+            {
+                thrownException = ex;
+            }
+
+            ResultReadiness.Set();
+
+            if (continuingTaskStartAction != null)
+            {
+                threadPool.AddContinuingTask(continuingTaskStartAction!);
             }
         }
 
@@ -115,28 +129,33 @@ public class MyThreadPool
         {
             get
             {
-                resultAccess.WaitOne();
+                ResultReadiness.WaitOne();
                 
-                if (token.IsCancellationRequested)
+                if (thrownException != null)
                 {
-                    throw new TaskCanceledException();
+                    throw new AggregateException("Task failed.", thrownException);
+                }
+                
+                if (result == null)
+                {
+                    throw new ArgumentException("Function does not return a result.");
                 }
 
-                if (this.thrownException != null)
-                {
-                    throw new AggregateException("Task failed.", this.thrownException);
-                }
-
-                ArgumentNullException.ThrowIfNull(this.result);
                 return result;
             }
         }
 
         IMyTask<TNewResult> IMyTask<TResult>.ContinueWith<TNewResult>(Func<TResult, TNewResult> nextTask)
         {
-            var newTask = new MyTask<TNewResult>(() => nextTask(Result), threadPool, token);
-            threadPool.ContinuousSubmit(newTask.Start);
-            return newTask;
+            if (IsCompleted)
+            {
+                return threadPool.Submit(() => nextTask(Result));
+            }
+
+            var continuingTask = new MyTask<TNewResult>(() => nextTask(Result), threadPool);
+            continuingTaskStartAction = continuingTask.Start;
+
+            return continuingTask;
         }
     }
 }
