@@ -5,12 +5,6 @@ namespace SimpleFTP;
 
 public class Server(string localAddress, int port)
 {
-    private enum RequestType
-    {
-        List = 1,
-        Get = 2
-    }
-
     private readonly TcpListener tcpListener = new(IPAddress.Parse(localAddress), port);
     private CancellationTokenSource cancellationToken = new CancellationTokenSource();
 
