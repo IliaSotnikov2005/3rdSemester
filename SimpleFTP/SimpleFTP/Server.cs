@@ -64,10 +64,19 @@ public class Server(string localAddress, int port)
             return;
         }
 
-        byte[] fileBytes = File.ReadAllBytes(path);
-        writer.Write(fileBytes.Length);
+        long size = new FileInfo(path).Length;
+        writer.Write(size);
 
-        writer.Write(fileBytes);
+        const int bufferSize = 4096;
+        byte[] buffer = new byte[bufferSize];
+
+        using var fileStream = new FileStream(path, FileMode.Open, FileAccess.Read);
+        int bytesRead;
+
+        while ((bytesRead = fileStream.Read(buffer, 0, buffer.Length)) > 0)
+        {
+            writer.Write(buffer, 0, bytesRead);
+        }
     }
 
     private async Task SendDirectoryList(NetworkStream stream, string path)
