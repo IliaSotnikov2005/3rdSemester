@@ -6,7 +6,7 @@ namespace SimpleFTP;
 public class Server(string localAddress, int port)
 {
     private readonly TcpListener tcpListener = new(IPAddress.Parse(localAddress), port);
-    private CancellationTokenSource cancellationToken = new CancellationTokenSource();
+    private CancellationTokenSource cancellationToken = new ();
 
     public void Start()
     {
@@ -60,7 +60,7 @@ public class Server(string localAddress, int port)
 
         if (!File.Exists(path))
         {
-            writer.Write(-1);
+            writer.Write((long)-1);
             return;
         }
 
@@ -111,6 +111,7 @@ public class Server(string localAddress, int port)
         }
 
         await ProcessRequestAsync(request, stream);
+        clientConnection.Close();
     }
 
     private async Task Listen()

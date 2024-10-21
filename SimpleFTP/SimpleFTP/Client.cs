@@ -14,7 +14,7 @@ public class Client(string hostName, int port)
         var stream = client.GetStream();
 
         var writer = new StreamWriter(stream) { AutoFlush = true };
-        await writer.WriteLineAsync($"{RequestType.List} {path}");
+        await writer.WriteLineAsync($"{(int)RequestType.List} {path}");
 
         return await GetResponseToListRequest(stream);
     }
@@ -29,14 +29,19 @@ public class Client(string hostName, int port)
             return [];
         }
 
+        if (response == "-1")
+        {
+            return [];
+        }
+
         var responseParts = response.Split();
 
         var count = int.Parse(responseParts[0]);
         var directoryItems = new (string, bool)[count];
 
-        for (var i = 1; i < count; i += 2)
+        for (var i = 0; i < count; ++i)
         {
-            directoryItems[i] = (responseParts[i], bool.Parse(responseParts[i + 1]));
+            directoryItems[i] = (responseParts[1 + i * 2], bool.Parse(responseParts[2 + i * 2]));
         }
 
         return directoryItems;
@@ -48,7 +53,7 @@ public class Client(string hostName, int port)
         var stream = client.GetStream();
 
         var writer = new StreamWriter(stream) { AutoFlush = true };
-        await writer.WriteLineAsync($"{RequestType.Get} {path}");
+        await writer.WriteLineAsync($"{(int)RequestType.Get} {path}");
 
         return GetResponseToGetRequest(stream);
     }
