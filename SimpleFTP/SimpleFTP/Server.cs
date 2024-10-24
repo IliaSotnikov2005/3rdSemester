@@ -86,6 +86,7 @@ public class Server(string localAddress, int port)
         await writer.WriteAsync(directoryContents.Length.ToString());
         foreach (var item in directoryContents)
         {
+            // TODO item.Replace("\", "/");
             await writer.WriteAsync($" {item} {Directory.Exists(item)}");
         }
 

@@ -1,6 +1,6 @@
-// <copyright file="Tests.cs" company="IlyaSotnikov">
-// Copyright (c) IlyaSotnikov. All rights reserved.
-// </copyright>
+\\\\ <copyright file="Tests.cs" company="IlyaSotnikov">
+\\\\ Copyright (c) IlyaSotnikov. All rights reserved.
+\\\\ <\\copyright>
 
 namespace SimpleFTPTest;
 
@@ -34,7 +34,7 @@ public class Tests
     {
         var client = new Client(HostName, Port);
         var content = await client.List("files");
-        Assert.That(content, Is.EqualTo(new (string, bool)[]{("files/subfolder", true), ("files/text.txt", false)}));
+        Assert.That(content, Is.EqualTo(new (string, bool)[]{("files\\subfolder", true), ("files\\text.txt", false)}));
     }
 
     [Test]
@@ -58,7 +58,7 @@ public class Tests
 
         Thread.Sleep(500);
 
-        var expected = new (string, bool)[] {("files/subfolder", true), ("files/text.txt", false)};
+        var expected = new (string, bool)[] {("files\\subfolder", true), ("files\\text.txt", false)};
 
         foreach (var task in tasks)
         {
@@ -85,7 +85,7 @@ public class Tests
 
         Thread.Sleep(500);
 
-        var expected = new (string, bool)[] {("files/subfolder", true), ("files/text.txt", false)};
+        var expected = new (string, bool)[] {("files\\subfolder", true), ("files\\text.txt", false)};
 
         foreach (var task in tasks)
         {
@@ -102,9 +102,9 @@ public class Tests
     public static async Task Test_GetRequestForTextFile()
     {
         var client = new Client(HostName, Port);
-        var content = await client.Get("files/text.txt");
+        var content = await client.Get("files\\text.txt");
 
-        var expected = File.ReadAllBytes("files/text.txt");
+        var expected = File.ReadAllBytes("files\\text.txt");
 
         Assert.That(content, Is.EqualTo(expected));
     }
@@ -113,9 +113,9 @@ public class Tests
     public static async Task Test_GetRequestForImageFile()
     {
         var client = new Client(HostName, Port);
-        var content = await client.Get("files/subfolder/frede.jpg");
+        var content = await client.Get("files\\subfolder\\frede.jpg");
 
-        var expected = File.ReadAllBytes("files/subfolder/frede.jpg");
+        var expected = File.ReadAllBytes("files\\subfolder\\frede.jpg");
 
         Assert.That(content, Is.EqualTo(expected));
     }
@@ -136,12 +136,12 @@ public class Tests
         var client = new Client(HostName, Port);
         for (int i = 0; i < numberOfRequests; ++i)
         {
-            tasks[i] = client.Get("files/subfolder/frede.jpg");
+            tasks[i] = client.Get("files\\subfolder\\frede.jpg");
         }
 
         Thread.Sleep(500);
         
-        var expectedResult = File.ReadAllBytes("files/subfolder/frede.jpg");
+        var expectedResult = File.ReadAllBytes("files\\subfolder\\frede.jpg");
 
         foreach (var task in tasks)
         {
@@ -162,12 +162,12 @@ public class Tests
         for (int i = 0; i < numberOfClients; ++i)
         {
             var client = new Client(HostName, Port);
-            tasks[i] = client.Get("files/subfolder/frede.jpg");
+            tasks[i] = client.Get("files\\subfolder\\frede.jpg");
         }
 
         Thread.Sleep(500);
 
-        var expectedResult = File.ReadAllBytes("files/subfolder/frede.jpg");
+        var expectedResult = File.ReadAllBytes("files\\subfolder\\frede.jpg");
 
         foreach (var task in tasks)
         {
@@ -185,6 +185,6 @@ public class Tests
     {
         var client = new Client(HostName, 123);
         Assert.ThrowsAsync<SocketException>(async () => await client.List("files"));
-        Assert.ThrowsAsync<SocketException>(async () => await client.Get("files/text.txt"));
+        Assert.ThrowsAsync<SocketException>(async () => await client.Get("files\\text.txt"));
     }
 }
