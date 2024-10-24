@@ -13,6 +13,12 @@ public class Tests
     private const string HostName = "localhost";
     private const int Port = 8080;
     private static Server server;
+    private static readonly char directorySeparator = Path.DirectorySeparatorChar;
+
+    private static readonly string files = "files";
+    private static readonly string subfolder = $"files{directorySeparator}subfolder";
+    private static readonly string textFile = $"files{directorySeparator}text.txt";
+    private static readonly string jpgFile = $"files{directorySeparator}subfolder{directorySeparator}frede.jpg";
 
     [SetUp]
     public static void SetupServer()
@@ -31,8 +37,14 @@ public class Tests
     public static async Task Test_ListRequest()
     {
         var client = new Client(HostName, Port);
-        var content = await client.List("files");
-        Assert.That(content, Is.EqualTo(new (string, bool)[]{("files/subfolder", true), ("files/text.txt", false)}));
+        var content = await client.List(files);
+
+        var expected = new (string, bool)[] { (subfolder, true), (textFile, false) };
+        Assert.That(content, Has.Length.EqualTo(2));
+        foreach (var expectedItem in expected)
+        {
+            Assert.That(content, Contains.Item(expectedItem));
+        }
     }
 
     [Test]
@@ -51,12 +63,12 @@ public class Tests
         var client = new Client(HostName, Port);
         for (int i = 0; i < numberOfRequests; ++i)
         {
-            tasks[i] = client.List("files");
+            tasks[i] = client.List(files);
         }
 
         Thread.Sleep(500);
 
-        var expected = new (string, bool)[] {("files/subfolder", true), ("files/text.txt", false)};
+        var expected = new (string, bool)[] { (subfolder, true), (textFile, false) };
 
         foreach (var task in tasks)
         {
@@ -74,16 +86,16 @@ public class Tests
     {
         int numberOfClients = 10;
         var tasks = new Task<(string, bool)[]>[numberOfClients];
-        
+
         for (int i = 0; i < numberOfClients; ++i)
         {
             var client = new Client(HostName, Port);
-            tasks[i] = client.List("files");
+            tasks[i] = client.List(files);
         }
 
         Thread.Sleep(500);
 
-        var expected = new (string, bool)[] {("files/subfolder", true), ("files/text.txt", false)};
+        var expected = new (string, bool)[] { (subfolder, true), (textFile, false) };
 
         foreach (var task in tasks)
         {
@@ -100,9 +112,9 @@ public class Tests
     public static async Task Test_GetRequestForTextFile()
     {
         var client = new Client(HostName, Port);
-        var content = await client.Get("files/text.txt");
+        var content = await client.Get(textFile);
 
-        var expected = File.ReadAllBytes("files/text.txt");
+        var expected = File.ReadAllBytes(textFile);
 
         Assert.That(content, Is.EqualTo(expected));
     }
@@ -111,9 +123,9 @@ public class Tests
     public static async Task Test_GetRequestForImageFile()
     {
         var client = new Client(HostName, Port);
-        var content = await client.Get("files/subfolder/frede.jpg");
+        var content = await client.Get(jpgFile);
 
-        var expected = File.ReadAllBytes("files/subfolder/frede.jpg");
+        var expected = File.ReadAllBytes(jpgFile);
 
         Assert.That(content, Is.EqualTo(expected));
     }
@@ -134,12 +146,12 @@ public class Tests
         var client = new Client(HostName, Port);
         for (int i = 0; i < numberOfRequests; ++i)
         {
-            tasks[i] = client.Get("files/subfolder/frede.jpg");
+            tasks[i] = client.Get(jpgFile);
         }
 
         Thread.Sleep(500);
-        
-        var expectedResult = File.ReadAllBytes("files/subfolder/frede.jpg");
+
+        var expectedResult = File.ReadAllBytes(jpgFile);
 
         foreach (var task in tasks)
         {
@@ -160,12 +172,12 @@ public class Tests
         for (int i = 0; i < numberOfClients; ++i)
         {
             var client = new Client(HostName, Port);
-            tasks[i] = client.Get("files/subfolder/frede.jpg");
+            tasks[i] = client.Get(jpgFile);
         }
 
         Thread.Sleep(500);
 
-        var expectedResult = File.ReadAllBytes("files/subfolder/frede.jpg");
+        var expectedResult = File.ReadAllBytes(jpgFile);
 
         foreach (var task in tasks)
         {
@@ -182,7 +194,7 @@ public class Tests
     public static void Test_ConnectToWrongPort_ThrowsException()
     {
         var client = new Client(HostName, 123);
-        Assert.ThrowsAsync<SocketException>(async () => await client.List("files"));
-        Assert.ThrowsAsync<SocketException>(async () => await client.Get("files/text.txt"));
+        Assert.ThrowsAsync<SocketException>(async () => await client.List(files));
+        Assert.ThrowsAsync<SocketException>(async () => await client.Get(textFile));
     }
 }
