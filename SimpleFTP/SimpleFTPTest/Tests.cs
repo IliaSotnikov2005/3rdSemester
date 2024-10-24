@@ -1,3 +1,7 @@
+// <copyright file="Tests.cs" company="IlyaSotnikov">
+// Copyright (c) IlyaSotnikov. All rights reserved.
+// </copyright>
+
 namespace SimpleFTPTest;
 
 using System.ComponentModel;
