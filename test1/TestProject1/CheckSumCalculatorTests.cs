@@ -5,9 +5,6 @@ using CheckSumCalculator;
 
 public class Tests
 {
-    private static readonly char directorySeparator = Path.DirectorySeparatorChar;
-    private static readonly string emptyFolder = $"..{directorySeparator}..{directorySeparator}..{directorySeparator}emptyFolder";
-
     [Test]
     public async Task ResultsAreEqual()
     {
@@ -38,9 +35,10 @@ public class Tests
     [Test]
     public async Task EmptyDirectoryCheckSum()
     {
-        byte[] expected = CheckSumSingleThreadCalculator.Run(emptyFolder);
+        Directory.CreateDirectory("emptyFolder");
+        byte[] expected = CheckSumSingleThreadCalculator.Run("emptyFolder");
 
-        byte[] actual = await CheckSumMultiThreadCalculator.RunAsync(emptyFolder);
+        byte[] actual = await CheckSumMultiThreadCalculator.RunAsync("emptyFolder");
 
         Assert.That(actual, Is.EqualTo(expected));
     }
