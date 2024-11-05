@@ -7,6 +7,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MyNUnit", "MyNUnit\MyNUnit.
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MyNUnitTest", "MyNUnitTest\MyNUnitTest.csproj", "{FA0DE5C3-D014-4070-9484-3C0022F13D24}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ProjectForTesting", "ProjectForTesting\ProjectForTesting.csproj", "{7A17B1C9-0014-40D1-9320-B89618C883CB}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -24,5 +26,9 @@ Global
 		{FA0DE5C3-D014-4070-9484-3C0022F13D24}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{FA0DE5C3-D014-4070-9484-3C0022F13D24}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{FA0DE5C3-D014-4070-9484-3C0022F13D24}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7A17B1C9-0014-40D1-9320-B89618C883CB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7A17B1C9-0014-40D1-9320-B89618C883CB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7A17B1C9-0014-40D1-9320-B89618C883CB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7A17B1C9-0014-40D1-9320-B89618C883CB}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

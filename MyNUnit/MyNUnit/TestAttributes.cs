@@ -3,7 +3,7 @@ using System.Reflection;
 namespace MyNUnit;
 
 [AttributeUsage(AttributeTargets.Method)]
-class TestAttribute : Attribute
+public class TestAttribute : Attribute
 {
     public Exception? Expected { get; }
     public string? Ignore { get; }
@@ -18,17 +18,17 @@ class TestAttribute : Attribute
 }
 
 [AttributeUsage(AttributeTargets.Method)]
-class BeforeAttribute : Attribute
+public class BeforeAttribute : Attribute
 {
 }
 
 [AttributeUsage(AttributeTargets.Method)]
-class AfterAttribute : Attribute
+public class AfterAttribute : Attribute
 {
 }
 
 [AttributeUsage(AttributeTargets.Method)]
-class BeforeClassAttribute : Attribute
+public class BeforeClassAttribute : Attribute
 {
     public BeforeClassAttribute(MethodInfo method)
     {
@@ -40,7 +40,7 @@ class BeforeClassAttribute : Attribute
 }
 
 [AttributeUsage(AttributeTargets.Method)]
-class AfterClassAttribute : Attribute
+public class AfterClassAttribute : Attribute
 {
     public AfterClassAttribute(MethodInfo method)
     {
