@@ -1,15 +1,32 @@
-using System.Reflection;
+// <copyright file="Tester.cs" company="IlyaSotnikov">
+// Copyright (c) IlyaSotnikov. All rights reserved.
+// </copyright>
 
 namespace MyNUnit;
 
+using System.Reflection;
 
+/// <summary>
+/// Tester class for MyNUnit.
+/// </summary>
 public static class Tester
 {
-    public static async Task RunTestsAsync(string path)
+    /// <summary>
+    /// Method for runninig tests.
+    /// </summary>
+    /// <param name="path">Path to project directory.</param>
+    /// <returns>List of results.</returns>
+    /// <exception cref="DirectoryNotFoundException">Throws if directory not found.</exception>
+    public static async Task<List<MyTestResult>> RunTestsAsync(string path)
     {
+        if (!Directory.Exists(path))
+        {
+            throw new DirectoryNotFoundException($"Directory '{path}' not found.");
+        }
+
         var assemblies = Directory.GetFiles(path, "*.dll").Select(Assembly.LoadFrom);
 
-        var testResults = new List<TestResult>();
+        var testResults = new List<MyTestResult>();
 
         foreach (var assembly in assemblies)
         {
@@ -21,12 +38,24 @@ public static class Tester
             }
         }
 
+        return testResults;
+    }
+
+    /// <summary>
+    /// Method for running tests and printing results.
+    /// </summary>
+    /// <param name="path">Path to project directory.</param>
+    /// <returns>Task.</returns>
+    public static async Task RunTestAndPrintResultsAsync(string path)
+    {
+        var testResults = await RunTestsAsync(path);
+
         PrintReport(testResults);
     }
 
-    private static async Task<List<TestResult>> RunTestClass(Type testClass)
+    private static async Task<List<MyTestResult>> RunTestClass(Type testClass)
     {
-        var results = new List<TestResult>();
+        var results = new List<MyTestResult>();
 
         object? instance = Activator.CreateInstance(testClass);
         if (instance == null)
@@ -45,7 +74,7 @@ public static class Tester
 
             if (!string.IsNullOrEmpty(testAttr.Ignore))
             {
-                results.Add(new TestResult(method.Name, "Ignored", testAttr.Ignore));
+                results.Add(new MyTestResult(method.Name, "Ignored", testAttr.Ignore));
                 return;
             }
 
@@ -71,18 +100,18 @@ public static class Tester
                 {
                     if (testAttr.Expected != null && ex.InnerException!.GetType() == testAttr.Expected.GetType())
                     {
-                        results.Add(new TestResult(method.Name, "Passed (Expected Exception)", string.Empty));
+                        results.Add(new MyTestResult(method.Name, "Passed (Expected Exception)", string.Empty));
                         return;
                     }
 
                     throw;
                 }
 
-                results.Add(new TestResult(method.Name, "Passed", string.Empty));
+                results.Add(new MyTestResult(method.Name, "Passed", string.Empty));
             }
             catch (Exception ex)
             {
-                results.Add(new TestResult(method.Name, "Failed", ex.Message));
+                results.Add(new MyTestResult(method.Name, "Failed", ex.Message));
             }
             finally
             {
@@ -96,7 +125,6 @@ public static class Tester
 
         return results;
     }
-
 
     private static void RunBefore(object instance)
     {
@@ -142,18 +170,35 @@ public static class Tester
         }
     }
 
-    private static void PrintReport(List<TestResult> results)
+    private static void PrintReport(List<MyTestResult> results)
     {
         foreach (var result in results)
         {
-            Console.WriteLine($"{result.Name}: {result.Status} - {result.Message ?? ""}");
+            Console.WriteLine($"{result.Name}: {result.Status} - {result.Message ?? string.Empty}");
         }
     }
+}
 
-    public class TestResult(string name, string status, string message)
-    {
-        public string Name { get; } = name;
-        public string Status { get; } = status;
-        public string Message { get; } = message;
-    }
+/// <summary>
+/// Class for test result.
+/// </summary>
+/// <param name="name">Name of the test.</param>
+/// <param name="status">Status of the test.</param>
+/// <param name="message">Message of the test.</param>
+public class MyTestResult(string name, string status, string message)
+{
+    /// <summary>
+    /// Gets name.
+    /// </summary>
+    public string Name { get; } = name;
+
+    /// <summary>
+    /// Gets status.
+    /// </summary>
+    public string Status { get; } = status;
+
+    /// <summary>
+    /// Gets message.
+    /// </summary>
+    public string Message { get; } = message;
 }

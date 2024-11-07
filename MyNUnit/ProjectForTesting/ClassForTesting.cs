@@ -7,7 +7,7 @@ public class ClassForTesting
     [BeforeClass]
     public static void BeforeClassMethod()
     {
-        Console.WriteLine("Before class");
+        Console.WriteLine($"Before class");
     }
 
     [AfterClass]
