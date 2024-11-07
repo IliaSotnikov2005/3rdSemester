@@ -2,19 +2,42 @@ namespace MyNUnit;
 
 public static class MyAssert
 {
-    public static void IsTrue(bool condition, string message = "Assertion failed")
+    public static void IsTrue(bool condition)
     {
         if (!condition)
         {
-            throw new Exception(message);
+            throw new AssertionException("Assertion failed");
         }
     }
 
-    public static void AreEqual<T>(T expected, T actual, string message = "Values are not equal")
+    public static void Throws<T>(Func<T> function)
     {
-        if (!expected.Equals(actual))
+        try
         {
-            throw new AssertionException(message);
+            function();
+        } catch (Exception ex)
+        {
+            if (typeof(T) != ex.GetType())
+            {
+                throw new AssertionException("Expected exception of type " + typeof(T).Name + " but got " + ex.GetType().Name);
+            }
+        }
+
+    }
+
+    public static void AreEqual<T>(T expected, T actual)
+    {
+        if (expected == null)
+        {
+            if (actual != null)
+            {
+                throw new AssertionException("Values are not equal");
+            }
+        }
+
+        if (!expected!.Equals(actual))
+        {
+            throw new AssertionException("Values are not equal");
         }
     }
 }

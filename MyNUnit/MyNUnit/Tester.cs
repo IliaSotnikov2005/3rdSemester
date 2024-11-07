@@ -13,83 +13,89 @@ public static class Tester
 
         foreach (var assembly in assemblies)
         {
-            var testClasses = assembly.GetTypes().Where(t => t.GetMethods().Any(m => m.GetCustomAttributes(typeof(TestAttribute), false).Length != 0));
+            var testClasses = assembly.GetTypes().Where(t => t.GetMethods().Any(m => m.GetCustomAttributes(typeof(MyTestAttribute), false).Length != 0));
 
             foreach (var testClass in testClasses)
             {
-                await RunTestClass(testClass, testResults);
+                testResults.AddRange(await RunTestClass(testClass));
             }
         }
 
         PrintReport(testResults);
     }
 
-    private static async Task RunTestClass(Type testClass, List<TestResult> results)
-{
-    object? instance = Activator.CreateInstance(testClass);
-    if (instance == null)
+    private static async Task<List<TestResult>> RunTestClass(Type testClass)
     {
-        return;
-    }
+        var results = new List<TestResult>();
 
-    RunBeforeClass(testClass);
-
-    var testMethods = testClass.GetMethods()
-        .Where(m => m.GetCustomAttributes(typeof(TestAttribute), false).Length != 0);
-
-    var tasks = testMethods.Select(async method =>
-    {
-        var testAttr = (TestAttribute)method.GetCustomAttributes(typeof(TestAttribute), false).First();
-
-        if (!string.IsNullOrEmpty(testAttr.Ignore))
+        object? instance = Activator.CreateInstance(testClass);
+        if (instance == null)
         {
-            results.Add(new TestResult(method.Name, "Ignored", testAttr.Ignore));
-            return;
+            return [];
         }
 
-        try
+        RunBeforeClass(testClass);
+
+        var testMethods = testClass.GetMethods()
+            .Where(m => m.GetCustomAttributes(typeof(MyTestAttribute), false).Length != 0);
+
+        var tasks = testMethods.Select(async method =>
         {
-            RunBefore(instance);
+            var testAttr = (MyTestAttribute)method.GetCustomAttributes(typeof(MyTestAttribute), false).First();
+
+            if (!string.IsNullOrEmpty(testAttr.Ignore))
+            {
+                results.Add(new TestResult(method.Name, "Ignored", testAttr.Ignore));
+                return;
+            }
 
             try
             {
-                var result = method.Invoke(instance, null);
-                if (result is Task taskResult)
+                RunBefore(instance);
+
+                try
                 {
-                    await taskResult;
+                    Console.WriteLine($"Testing");
+                    var result = method.Invoke(instance, null);
+
+                    if (result is Task taskResult)
+                    {
+                        await taskResult;
+                    }
+                    else if (result != null)
+                    {
+                        await Task.CompletedTask;
+                    }
                 }
-                else if (result != null)
+                catch (Exception ex)
                 {
-                    await Task.CompletedTask;
+                    if (testAttr.Expected != null && ex.InnerException!.GetType() == testAttr.Expected.GetType())
+                    {
+                        results.Add(new TestResult(method.Name, "Passed (Expected Exception)", string.Empty));
+                        return;
+                    }
+
+                    throw;
                 }
+
+                results.Add(new TestResult(method.Name, "Passed", string.Empty));
             }
             catch (Exception ex)
             {
-                if (testAttr.Expected != null && ex.InnerException == testAttr.Expected)
-                {
-                    results.Add(new TestResult(method.Name, "Passed (Expected Exception)", string.Empty));
-                    return;
-                }
-                
-                throw;
+                results.Add(new TestResult(method.Name, "Failed", ex.Message));
             }
+            finally
+            {
+                RunAfter(instance);
+            }
+        });
 
-            results.Add(new TestResult(method.Name, "Passed", string.Empty));
-        }
-        catch (Exception ex)
-        {
-            results.Add(new TestResult(method.Name, "Failed", ex.Message));
-        }
-        finally
-        {
-            RunAfter(instance);
-        }
-    });
+        await Task.WhenAll(tasks);
 
-    await Task.WhenAll(tasks);
+        RunAfterClass(testClass);
 
-    RunAfterClass(testClass);
-}
+        return results;
+    }
 
 
     private static void RunBefore(object instance)
