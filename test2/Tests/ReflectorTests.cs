@@ -6,13 +6,7 @@ using ReflectorSpace;
 [TestFixture]
 public class ReflectorTests
 {
-    private Reflector reflector;
-
-    [SetUp]
-    public void SetUp()
-    {
-        reflector = new Reflector();
-    }
+    private Reflector reflector = new ();
 
     [Test]
     public void PrintStructure_ValidClass_CreatesFileWithCorrectContent()
