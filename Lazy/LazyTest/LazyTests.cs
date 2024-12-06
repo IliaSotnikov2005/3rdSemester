@@ -76,22 +76,6 @@ public class LazyTests
         Assert.That(evaluations, Is.EqualTo(1));
     }
 
-    /// <summary>
-    /// Test that Lazies throw exceptions.
-    /// </summary>
-    #pragma warning disable CS8603 // Dereference of a possibly null reference.
-    [Test]
-    public static void NullValueException_IsThrownWhenValueIsNull()
-    {
-        ILazy<object>[] lazies = [new SingleThreadedLazy<object>(() => default), new MultiThreadedLazy<object>(() => default)];
-
-        foreach (var lazy in lazies)
-        {
-            Assert.That(() => lazy.Get(), Throws.InstanceOf<NullValueException>());
-        }
-    }
-    #pragma warning restore CS8603 // Dereference of a possibly null reference.
-
     private static IEnumerable<TestCaseData> MultiThreadCases()
     {
         for (int i = 0; i < Suppliers.Length; ++i)

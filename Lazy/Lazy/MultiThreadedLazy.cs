@@ -11,13 +11,12 @@ namespace Lazy;
 /// <param name="supplier">A function that will be calculated lazily.</param>
 public class MultiThreadedLazy<T>(Func<T> supplier) : ILazy<T>
 {
-    private readonly Func<T> supplier = supplier;
     private readonly object lockObject = new ();
-    private bool evaluated = false;
+    private volatile bool evaluated = false;
     private T? value;
 
     /// <inheritdoc/>
-    public T Get()
+    public T? Get()
     {
         if (this.evaluated)
         {
@@ -28,11 +27,14 @@ public class MultiThreadedLazy<T>(Func<T> supplier) : ILazy<T>
         {
             if (!this.evaluated)
             {
-                this.value = this.supplier();
+                this.value = supplier();
                 this.evaluated = true;
+#pragma warning disable CS8625
+                supplier = null;
+#pragma warning restore CS8625
             }
         }
 
-        return this.value ?? throw new NullValueException("Value is null.");
+        return this.value;
     }
 }

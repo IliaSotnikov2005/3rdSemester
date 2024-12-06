@@ -8,12 +8,12 @@ namespace Lazy;
 /// Interface for lazy computation.
 /// </summary>
 /// <typeparam name="T">The type of the returned value.</typeparam>
-public interface ILazy<T>
+public interface ILazy<out T>
 {
     /// <summary>
     /// Gets the lazily initialized value.
     /// </summary>
     /// <returns>The lazily initialized value.</returns>
     /// <exception cref="NullValueException">Thrown when the value is null.</exception>
-    public T Get();
+    public T? Get();
 }

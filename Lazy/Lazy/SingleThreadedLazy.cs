@@ -11,17 +11,19 @@ namespace Lazy;
 /// <param name="supplier">A function that will be calculated lazily.</param>
 public class SingleThreadedLazy<T>(Func<T> supplier) : ILazy<T>
 {
-    private readonly Func<T> supplier = supplier;
     private bool evaluated = false;
     private T? value;
 
     /// <inheritdoc/>
-    public T Get()
+    public T? Get()
     {
         if (!this.evaluated)
         {
-            this.value = this.supplier();
+            this.value = supplier();
             this.evaluated = true;
+#pragma warning disable CS8625
+            supplier = null;
+#pragma warning restore CS8625
         }
 
         return this.value ?? throw new NullValueException("Value is null.");
