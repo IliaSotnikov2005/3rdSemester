@@ -1,6 +1,7 @@
 // <copyright file="ParallelMatrixMultiplicationTests.cs" company="IlyaSotnikov">
 // Copyright (c) IlyaSotnikov. All rights reserved.
 // </copyright>
+#pragma warning disable SA1010 // Opening square brackets should be spaced correctly
 
 namespace ParallelMatrixMultiplicationTest;
 
@@ -12,14 +13,13 @@ using ParallelMatrixMultiplication;
 public class ParallelMatrixMultiplicationTests
 {
     /// <summary>
-    /// Ñhecks that the multiplication is performed correctly.
+    /// Checks that the multiplication is performed correctly.
     /// </summary>
     /// <param name="matrixMultiplier">Type of myltiplier.</param>
     [TestCaseSource(nameof(ParallelMultiplicationTestData))]
     public void MatrixMultiplication_ReturnsCorrect(IMatrixMultiplier matrixMultiplier)
     {
         int[][] matrix1 = [[1, 2], [3, 4]];
-
         int[][] matrix2 = [[5, 6], [7, 8]];
 
         int[][] expected = [[19, 22], [43, 50]];
@@ -30,7 +30,7 @@ public class ParallelMatrixMultiplicationTests
     }
 
     /// <summary>
-    /// Ñhecks that throws exception if the number of rows and columns is different.
+    /// Checks that throws exception if the number of rows and columns is different.
     /// </summary>
     /// <param name="matrixMultiplier">Type of myltiplier.</param>
     [TestCaseSource(nameof(ParallelMultiplicationTestData))]
@@ -49,3 +49,4 @@ public class ParallelMatrixMultiplicationTests
         yield return new TestCaseData(new ParallelMultiplier());
     }
 }
+#pragma warning restore SA1010 // Opening square brackets should be spaced correctly

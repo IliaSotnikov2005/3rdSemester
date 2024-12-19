@@ -9,39 +9,42 @@ namespace ParallelMatrixMultiplication;
 /// </summary>
 public class ParallelMultiplier : IMatrixMultiplier
 {
-    private int[][] result = [];
-    private int[][] matrix1 = [];
-    private int[][] matrix2 = [];
-    private int columns = 0;
-    private int rows = 0;
-
     /// <inheritdoc/>
-    public int[][] Multiply(int[][] inputMatrix1, int[][] inputMatrix2)
+    public int[][] Multiply(int[][] matrix1, int[][] matrix2)
     {
-        if (inputMatrix1.Length != inputMatrix2[0].Length)
+        if (matrix1.Length != matrix2[0].Length)
         {
-            throw new ArgumentException("Number of rows in matrix1 must be equal to number of columns in matrix2.");
+            throw new ArgumentException(
+                "Number of rows in matrix1 must be equal to number of columns in matrix2.");
         }
 
-        this.matrix1 = inputMatrix1;
-        this.matrix2 = inputMatrix2;
+        int rows = matrix1.Length;
+        int columns = matrix2[0].Length;
 
-        this.rows = this.matrix1.Length;
-        this.columns = this.matrix2[0].Length;
-
-        this.result = new int[this.rows][];
-        for (int i = 0; i < this.rows; ++i)
+        var result = new int[rows][];
+        for (int i = 0; i < rows; ++i)
         {
-            this.result[i] = new int[this.columns];
+            result[i] = new int[columns];
         }
 
-        Thread[] threads = new Thread[this.rows];
+        var threads = new Thread[Environment.ProcessorCount];
 
-        for (int i = 0; i < this.rows; ++i)
+        for (int i = 0; i < rows; ++i)
         {
             int rowIndex = i;
 
-            threads[i] = new Thread(() => this.MultiplyRowByColumn(rowIndex));
+            threads[i] = new Thread(() =>
+            {
+                for (int column = 0; column < columns; ++column)
+                {
+                    result[rowIndex][column] = 0;
+                    for (int j = 0; j < matrix1[0].Length; ++j)
+                    {
+                        result[rowIndex][column] += matrix1[rowIndex][j] * matrix2[j][column];
+                    }
+                }
+            });
+
             threads[i].Start();
         }
 
@@ -50,18 +53,6 @@ public class ParallelMultiplier : IMatrixMultiplier
             thread.Join();
         }
 
-        return this.result;
-    }
-
-    private void MultiplyRowByColumn(int rowIndex)
-    {
-        for (int column = 0; column < this.columns; ++column)
-        {
-            this.result[rowIndex][column] = 0;
-            for (int i = 0; i < this.matrix1[0].Length; ++i)
-            {
-                this.result[rowIndex][column] += this.matrix1[rowIndex][i] * this.matrix2[i][column];
-            }
-        }
+        return result;
     }
 }
