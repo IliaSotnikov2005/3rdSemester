@@ -16,10 +16,10 @@ using OxyPlot.Series;
 /// </summary>
 public class MatrixMultiplicationBenchmark
 {
-    private static Random random = new ();
-    private List<double> parallelTimesMeans = [];
-    private List<double> sequentialTimesMeans = [];
-    private List<int> sizes = [];
+    private static readonly Random Random = new ();
+    private readonly List<double> parallelTimesMeans = [];
+    private readonly List<double> sequentialTimesMeans = [];
+    private readonly List<int> sizes = [];
 
     /// <summary>
     /// The method to run the benchmark.
@@ -113,7 +113,7 @@ public class MatrixMultiplicationBenchmark
             matrix[i] = new int[size];
             for (int j = 0; j < size; ++j)
             {
-                matrix[i][j] = random.Next(1, 10);
+                matrix[i][j] = Random.Next(1, 10);
             }
         }
 

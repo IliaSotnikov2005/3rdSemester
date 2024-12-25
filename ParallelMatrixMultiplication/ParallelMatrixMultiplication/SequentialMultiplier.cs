@@ -12,6 +12,16 @@ public class SequentialMultiplier : IMatrixMultiplier
     /// <inheritdoc/>
     public int[][] Multiply(int[][] matrix1, int[][] matrix2)
     {
+        if (matrix1 is null || matrix2 is null)
+        {
+            throw new ArgumentNullException("Matrix1 cannot be null.");
+        }
+
+        if (matrix1.Length == 0 || matrix2.Length == 0)
+        {
+            throw new ArgumentException("The matrices must not be empty.");
+        }
+        
         if (matrix1.Length != matrix2[0].Length)
         {
             throw new ArgumentException("The number of rows of the first matrix must be equal to the number of columns of the other matrix.");

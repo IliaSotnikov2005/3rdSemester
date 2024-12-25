@@ -9,7 +9,6 @@ using ParallelMatrixMultiplication;
 if (args.Length == 0)
 {
     Console.WriteLine("There are no arguments.\nUse -help for help\n-m <filename> <filename> to multiply the matrices\n-b to run the benchmark.");
-
     return;
 }
 
