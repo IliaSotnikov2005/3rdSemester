@@ -17,11 +17,15 @@
     <PackageReference Include="coverlet.collector" Version="6.0.0" />
     <Content Include="files/**/*.*">
     <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-  </Content>
+    </Content>
+    <PackageReference Include="StyleCop.Analyzers" Version="1.2.0-beta.556" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\SimpleFTP\SimpleFTP.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <AdditionalFiles Include="stylecop.json" />
   </ItemGroup>
 
 </Project>

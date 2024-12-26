@@ -28,7 +28,7 @@ public class Client(string hostName, int port)
     /// </summary>
     /// <param name="path">The path to directory on the server.</param>
     /// <returns>An array of directory elements.</returns>
-    public async Task<(string, bool)[]> List(string path)
+    public async Task<(string, bool)[]?> List(string path)
     {
         using var client = new TcpClient(this.HostName, this.Port);
         var stream = client.GetStream();
@@ -36,7 +36,7 @@ public class Client(string hostName, int port)
         var writer = new StreamWriter(stream) { AutoFlush = true };
         await writer.WriteLineAsync($"{(int)RequestType.List} {path}");
 
-        return await GetResponseToListRequest(stream);
+        return await GetResponseToListRequestAsync(stream);
     }
 
     /// <summary>
@@ -52,27 +52,29 @@ public class Client(string hostName, int port)
         var writer = new StreamWriter(stream) { AutoFlush = true };
         await writer.WriteLineAsync($"{(int)RequestType.Get} {path}");
 
-        return GetResponseToGetRequest(stream);
+        return await GetResponseToGetRequestAsync(stream);
     }
 
-    private static async Task<(string, bool)[]> GetResponseToListRequest(Stream stream)
+#pragma warning disable SA1011 // Closing square brackets should be spaced correctly
+    private static async Task<(string, bool)[]?> GetResponseToListRequestAsync(Stream stream)
+#pragma warning restore SA1011 // Closing square brackets should be spaced correctly
     {
         using var reader = new StreamReader(stream);
         var response = await reader.ReadLineAsync();
-
         if (response == null)
         {
-            return [];
+            return null;
         }
 
         if (response == "-1")
         {
-            return [];
+            return null;
         }
 
         var responseParts = response.Split();
 
         var count = int.Parse(responseParts[0]);
+
         var directoryItems = new (string, bool)[count];
 
         for (var i = 0; i < count; ++i)
@@ -83,7 +85,7 @@ public class Client(string hostName, int port)
         return directoryItems;
     }
 
-    private static byte[] GetResponseToGetRequest(Stream stream)
+    private static async Task<byte[]> GetResponseToGetRequestAsync(Stream stream)
     {
         using var reader = new BinaryReader(stream);
 
@@ -101,7 +103,7 @@ public class Client(string hostName, int port)
         while (bytesRead < size)
         {
             int toRead = (int)Math.Min(bufferSize, size - bytesRead);
-            int read = stream.Read(buffer, 0, toRead);
+            int read = await stream.ReadAsync(buffer, 0, toRead);
 
             if (read == 0)
             {

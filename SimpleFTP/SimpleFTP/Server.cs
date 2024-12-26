@@ -20,22 +20,20 @@ public class Server(string localAddress, int port)
     /// <summary>
     /// The method that starts the server.
     /// </summary>
-    public void Start()
+    /// <returns>Task.</returns>
+    public async Task StartAsync()
     {
         this.cancellationToken = new CancellationTokenSource();
         this.tcpListener.Start();
-        _ = this.Listen();
+        await this.Listen();
     }
 
     /// <summary>
     /// The method that stops the server.
     /// </summary>
-    public void Stop()
-    {
-        this.tcpListener.Stop();
-    }
+    public void Stop() => this.tcpListener.Stop();
 
-    private static RequestType GetRequestType(string input)
+    private static RequestType? GetRequestType(string input)
     {
         if (Enum.TryParse<RequestType>(input, out var requestType))
         {
@@ -43,11 +41,11 @@ public class Server(string localAddress, int port)
         }
         else
         {
-            throw new ArgumentException("Invalid request type");
+            return null;
         }
     }
 
-    private static void SendFile(NetworkStream stream, string path)
+    private static async Task SendFileAsync(NetworkStream stream, string path)
     {
         using var writer = new BinaryWriter(stream);
 
@@ -60,16 +58,9 @@ public class Server(string localAddress, int port)
         long size = new FileInfo(path).Length;
         writer.Write(size);
 
-        const int bufferSize = 4096;
-        byte[] buffer = new byte[bufferSize];
-
         using var fileStream = new FileStream(path, FileMode.Open, FileAccess.Read);
-        int bytesRead;
 
-        while ((bytesRead = fileStream.Read(buffer, 0, buffer.Length)) > 0)
-        {
-            writer.Write(buffer, 0, bytesRead);
-        }
+        await fileStream.CopyToAsync(stream);
     }
 
     private static async Task SendDirectoryList(NetworkStream stream, string path)
@@ -86,22 +77,35 @@ public class Server(string localAddress, int port)
         await writer.WriteAsync(directoryContents.Length.ToString());
         foreach (var item in directoryContents)
         {
-            // TODO item.Replace("\", "/");
             await writer.WriteAsync($" {item} {Directory.Exists(item)}");
         }
 
         await writer.WriteAsync("\n");
     }
 
-    private async Task ProcessRequestAsync(string request, NetworkStream stream)
+    private static async Task SendMessageAsync(NetworkStream stream, string message)
+    {
+        using var writer = new StreamWriter(stream);
+
+        await writer.WriteAsync(message + "\n");
+    }
+
+    private static async Task ProcessRequestAsync(string request, NetworkStream stream)
     {
         var requestArgs = request.Split();
         if (requestArgs.Length != 2)
         {
+            await SendMessageAsync(stream, "Error: expected 2 arguments.");
             return;
         }
 
         var requestType = GetRequestType(requestArgs[0]);
+        if (requestType == null)
+        {
+            await SendMessageAsync(stream, "Error: unknown request type.");
+            return;
+        }
+
         var path = requestArgs[1];
 
         switch (requestType)
@@ -110,12 +114,12 @@ public class Server(string localAddress, int port)
                 await SendDirectoryList(stream, path);
                 break;
             case RequestType.Get:
-                SendFile(stream, path);
+                await SendFileAsync(stream, path);
                 break;
         }
     }
 
-    private async Task HandleConnection(Socket clientConnection)
+    private static async Task HandleConnection(Socket clientConnection)
     {
         var stream = new NetworkStream(clientConnection);
         using var streamReader = new StreamReader(stream);
@@ -126,7 +130,7 @@ public class Server(string localAddress, int port)
             return;
         }
 
-        await this.ProcessRequestAsync(request, stream);
+        await ProcessRequestAsync(request, stream);
         clientConnection.Close();
     }
 
@@ -137,12 +141,9 @@ public class Server(string localAddress, int port)
         while (!this.cancellationToken.IsCancellationRequested)
         {
             Socket clientConnection = await this.tcpListener.AcceptSocketAsync(this.cancellationToken.Token);
-            clientConnectionsTasks.Add(this.HandleConnection(clientConnection));
+            clientConnectionsTasks.Add(HandleConnection(clientConnection));
         }
 
-        foreach (var clientConnectionTask in clientConnectionsTasks)
-        {
-            clientConnectionTask.Wait();
-        }
+        await Task.WhenAll(clientConnectionsTasks);
     }
 }
