@@ -43,6 +43,9 @@ public class Server(string localAddress, int port)
         }
     }
 
+    /// <summary>
+    /// Disposes the server.
+    /// </summary>
     public void Dispose() => this.StopAsync().Wait();
 
     private static RequestType? GetRequestType(string input)
@@ -152,8 +155,15 @@ public class Server(string localAddress, int port)
 
         while (!this.cancellationToken.IsCancellationRequested)
         {
-            Socket clientConnection = await this.tcpListener.AcceptSocketAsync(this.cancellationToken.Token);
-            clientConnectionsTasks.Add(HandleConnection(clientConnection));
+            try
+            {
+                Socket clientConnection = await this.tcpListener.AcceptSocketAsync(this.cancellationToken.Token);
+                clientConnectionsTasks.Add(HandleConnection(clientConnection));
+            }
+            catch (OperationCanceledException)
+            {
+                continue;
+            }
         }
 
         await Task.WhenAll(clientConnectionsTasks);
