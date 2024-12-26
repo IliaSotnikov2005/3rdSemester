@@ -10,9 +10,9 @@ namespace MyThreadPool;
 public class MyThreadPool
 {
     private readonly Thread[] threads;
-    private readonly Queue<Action> tasksQueue = new();
-    private readonly CancellationTokenSource cancellationSource = new();
-    private readonly AutoResetEvent gettingStarted = new(false);
+    private readonly Queue<Action> tasksQueue = new ();
+    private readonly CancellationTokenSource cancellationSource = new ();
+    private readonly AutoResetEvent gettingStarted = new (false);
 
     /// <summary>
     /// Initializes a new instance of the <see cref="MyThreadPool"/> class.

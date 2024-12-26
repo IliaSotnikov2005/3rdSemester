@@ -132,11 +132,15 @@ public class Tests
         var threadPool = new MyThreadPool(numberOfThreads);
         var task = threadPool.Submit<int>(() => throw new ArgumentException());
         var exception = Assert.Throws<AggregateException>(() => { int a = task.Result; });
-        Assert.Multiple(() =>
+        Assert.That(exception, Is.Not.Null);
+        if (exception is not null)
         {
-            Assert.That(exception.InnerException, Is.Not.Null);
-            Assert.That(exception.InnerException!.GetType(), Is.EqualTo(typeof(ArgumentException)));
-        });
+            Assert.Multiple(() =>
+            {
+                Assert.That(exception.InnerException, Is.Not.Null);
+                Assert.That(exception.InnerException!.GetType(), Is.EqualTo(typeof(ArgumentException)));
+            });
+        }
 
         threadPool.Shutdown();
     }
