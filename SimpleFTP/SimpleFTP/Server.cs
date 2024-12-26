@@ -110,14 +110,14 @@ public class Server(string localAddress, int port)
         var requestArgs = request.Split();
         if (requestArgs.Length != 2)
         {
-            await SendMessageAsync(stream, "Error: expected 2 arguments.");
+            await SendMessageAsync(stream, "-1 Error: expected 2 arguments.");
             return;
         }
 
         var requestType = GetRequestType(requestArgs[0]);
         if (requestType == null)
         {
-            await SendMessageAsync(stream, "Error: unknown request type.");
+            await SendMessageAsync(stream, "-1 Error: unknown request type.");
             return;
         }
 

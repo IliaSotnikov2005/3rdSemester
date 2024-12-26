@@ -66,12 +66,11 @@ public class Client(string hostName, int port)
             return null;
         }
 
-        if (response == "-1")
+        var responseParts = response.Split();
+        if (responseParts[0] == "-1")
         {
             return null;
         }
-
-        var responseParts = response.Split();
 
         var count = int.Parse(responseParts[0]);
 
