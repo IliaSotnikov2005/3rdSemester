@@ -10,9 +10,9 @@ namespace MyThreadPool;
 public class MyThreadPool
 {
     private readonly Thread[] threads;
-    private readonly Queue<Action> tasksQueue = new ();
-    private readonly CancellationTokenSource cancellationSource = new ();
-    private readonly AutoResetEvent gettingStarted = new (false);
+    private readonly Queue<Action> tasksQueue = new();
+    private readonly CancellationTokenSource cancellationSource = new();
+    private readonly AutoResetEvent gettingStarted = new(false);
 
     /// <summary>
     /// Initializes a new instance of the <see cref="MyThreadPool"/> class.
@@ -49,7 +49,7 @@ public class MyThreadPool
             throw new OperationCanceledException("The threadpool was shutted down.", this.cancellationSource.Token);
         }
 
-        var newTask = new MyTask<TResult>(function, this);
+        var newTask = new MyTask<TResult>(function, this, this.cancellationSource.Token);
 
         lock (this.tasksQueue)
         {
@@ -89,7 +89,6 @@ public class MyThreadPool
             {
                 if (this.tasksQueue.Count == 0)
                 {
-                    Monitor.PulseAll(this.tasksQueue);
                     continue;
                 }
 
@@ -118,14 +117,12 @@ public class MyThreadPool
     /// <typeparam name="TResult">The type of function result.</typeparam>
     /// <param name="function">The function to be executed.</param>
     /// <param name="threadPool">The trhread pool object.</param>
-    public class MyTask<TResult>(Func<TResult> function, MyThreadPool threadPool) : IMyTask<TResult>
+    public class MyTask<TResult>(Func<TResult> function, MyThreadPool threadPool, CancellationToken cancellationToken) : IMyTask<TResult>
     {
-        private readonly MyThreadPool threadPool = threadPool;
-        private readonly Func<TResult> function = function;
         private readonly ManualResetEvent resultReadiness = new (false);
+        private readonly List<Action> continuingTasks = [];
         private TResult? result;
         private Exception? thrownException = null;
-        private Action? continuingTaskStartAction = null;
 
         /// <inheritdoc/>
         public bool IsCompleted { get; private set; } = false;
@@ -135,7 +132,15 @@ public class MyThreadPool
         {
             get
             {
-                this.resultReadiness.WaitOne();
+                while (!this.IsCompleted)
+                {
+                    if (cancellationToken.IsCancellationRequested)
+                    {
+                        throw new TaskCanceledException();
+                    }
+
+                    this.resultReadiness.WaitOne();
+                }
 
                 if (this.thrownException != null)
                 {
@@ -156,39 +161,44 @@ public class MyThreadPool
         /// </summary>
         public void Start()
         {
-            if (this.IsCompleted)
+            if (cancellationToken.IsCancellationRequested)
             {
+                this.resultReadiness.Set();
                 return;
             }
 
             try
             {
-                this.result = this.function();
+                this.result = function();
                 this.IsCompleted = true;
+                function = null!;
             }
             catch (Exception ex)
             {
                 this.thrownException = ex;
+                this.IsCompleted = true;
             }
 
             this.resultReadiness.Set();
 
-            if (this.continuingTaskStartAction != null)
-            {
-                this.threadPool.AddContinuingTask(this.continuingTaskStartAction!);
-            }
+            this.continuingTasks.ForEach(threadPool.AddContinuingTask);
         }
 
         /// <inheritdoc/>
         IMyTask<TNewResult> IMyTask<TResult>.ContinueWith<TNewResult>(Func<TResult, TNewResult> nextTask)
         {
-            if (this.IsCompleted)
+            if (cancellationToken.IsCancellationRequested)
             {
-                return this.threadPool.Submit(() => nextTask(this.Result));
+                throw new OperationCanceledException("Thread pool was shut down");
             }
 
-            var continuingTask = new MyTask<TNewResult>(() => nextTask(this.Result), this.threadPool);
-            this.continuingTaskStartAction = continuingTask.Start;
+            if (this.IsCompleted)
+            {
+                return threadPool.Submit(() => nextTask(this.Result));
+            }
+
+            var continuingTask = new MyTask<TNewResult>(() => nextTask(this.Result), threadPool, cancellationToken);
+            this.continuingTasks.Add(continuingTask.Start);
 
             return continuingTask;
         }

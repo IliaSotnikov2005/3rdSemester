@@ -36,13 +36,15 @@ public class Tests
         {
             AssertBlock(task, 1);
         }
+
+        threadPool.Shutdown();
     }
 
     /// <summary>
     /// Tests that works correctly when threads is more than tasks.
     /// </summary>
     [Test]
-    public static void Test_ThreadsMoreThenTasks_WorksCorrect()
+    public static void Test_ThreadsMoreThanTasks_WorksCorrect()
     {
         var numberOfThreads = 20;
         var numberOfTasks = 10;
@@ -59,13 +61,15 @@ public class Tests
         {
             AssertBlock(tasks[i], i * 2);
         }
+
+        threadPool.Shutdown();
     }
 
     /// <summary>
     /// Tests that works correctly when tasks is more than threads.
     /// </summary>
     [Test]
-    public static void Test_TasksMoreThenThreads_WorksCorrect()
+    public static void Test_TasksMoreThanThreads_WorksCorrect()
     {
         var numberOfThreads = 10;
         var numberOfTasks = 20;
@@ -83,6 +87,8 @@ public class Tests
         {
             AssertBlock(tasks[i], i * i);
         }
+
+        threadPool.Shutdown();
     }
 
     /// <summary>
@@ -102,6 +108,8 @@ public class Tests
         AssertBlock(task2, "Cucumber banana");
         AssertBlock(task3, false);
         AssertBlock(task4, ['1', '2', '3', '4', '5']);
+
+        threadPool.Shutdown();
     }
 
     /// <summary>
@@ -128,8 +136,9 @@ public class Tests
         {
             Assert.That(exception.InnerException, Is.Not.Null);
             Assert.That(exception.InnerException!.GetType(), Is.EqualTo(typeof(ArgumentException)));
-            Assert.That(task.IsCompleted, Is.False);
         });
+
+        threadPool.Shutdown();
     }
 
     /// <summary>
@@ -142,6 +151,8 @@ public class Tests
         var threadPool = new MyThreadPool(numberOfThreads);
         var task = threadPool.Submit(() => "12" + "34").ContinueWith((number) => int.Parse(number.ToArray()));
         AssertBlock(task, 1234);
+
+        threadPool.Shutdown();
     }
 
     /// <summary>
@@ -153,6 +164,8 @@ public class Tests
         var threadPool = new MyThreadPool(2);
         var task = threadPool.Submit(() => "12" + "34").ContinueWith((number) => int.Parse(number.ToArray())).ContinueWith((number) => number * 2);
         AssertBlock(task, 2468);
+
+        threadPool.Shutdown();
     }
 
     /// <summary>
