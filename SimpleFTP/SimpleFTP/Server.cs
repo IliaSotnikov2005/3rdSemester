@@ -37,7 +37,7 @@ public class Server(string localAddress, int port)
         this.cancellationToken.Cancel();
         this.tcpListener.Stop();
 
-        if (listenTask != null)
+        if (this.listenTask != null)
         {
             await this.listenTask;
         }
