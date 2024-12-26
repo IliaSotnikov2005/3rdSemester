@@ -2,6 +2,7 @@
 // Copyright (c) IlyaSotnikov. All rights reserved.
 // </copyright>
 #pragma warning disable SA1010 // Opening square brackets should be spaced correctly
+#pragma warning disable CS8625 // Cannot convert null literal to non-nullable reference type.
 
 namespace ParallelMatrixMultiplicationTest;
 
@@ -43,6 +44,10 @@ public class ParallelMatrixMultiplicationTests
         Assert.Throws<ArgumentException>(() => matrixMultiplier.Multiply(matrix1, matrix2));
     }
 
+    /// <summary>
+    /// Checks if calculator throws an exception with null matrix1.
+    /// </summary>
+    /// <param name="matrixMultiplier">Matrix multiplier.</param>
     [TestCaseSource(nameof(ParallelMultiplicationTestData))]
     public void Multiplication_NullMatrix1_ThrowsException(IMatrixMultiplier matrixMultiplier)
     {
@@ -51,6 +56,10 @@ public class ParallelMatrixMultiplicationTests
         Assert.Throws<ArgumentNullException>(() => matrixMultiplier.Multiply(null, matrix2));
     }
 
+     /// <summary>
+    /// Checks if calculator throws an exception with null matrix2.
+    /// </summary>
+    /// <param name="matrixMultiplier">Matrix multiplier.</param>
     [TestCaseSource(nameof(ParallelMultiplicationTestData))]
     public void Multiplication_NullMatrix2_ThrowsException(IMatrixMultiplier matrixMultiplier)
     {
@@ -59,6 +68,10 @@ public class ParallelMatrixMultiplicationTests
         Assert.Throws<ArgumentNullException>(() => matrixMultiplier.Multiply(matrix1, null));
     }
 
+    /// <summary>
+    /// Checks if calculator throws an exception with empty matrix1.
+    /// </summary>
+    /// <param name="matrixMultiplier">Matrix multiplier.</param>
     [TestCaseSource(nameof(ParallelMultiplicationTestData))]
     public void Multiplication_EmptyMatrix1_ThrowsException(IMatrixMultiplier matrixMultiplier)
     {
@@ -68,6 +81,10 @@ public class ParallelMatrixMultiplicationTests
         Assert.Throws<ArgumentException>(() => matrixMultiplier.Multiply(matrix1, matrix2));
     }
 
+    /// <summary>
+    /// Checks if calculator throws an exception with empty matrix1.
+    /// </summary>
+    /// <param name="matrixMultiplier">Matrix multiplier.</param>
     [TestCaseSource(nameof(ParallelMultiplicationTestData))]
     public void Multiplication_EmptyMatrix2_ThrowsException(IMatrixMultiplier matrixMultiplier)
     {
@@ -77,12 +94,15 @@ public class ParallelMatrixMultiplicationTests
         Assert.Throws<ArgumentException>(() => matrixMultiplier.Multiply(matrix1, matrix2));
     }
 
+    /// <summary>
+    /// Checks if parallel matrix multiplication result mathes sequential one.
+    /// </summary>
     [Test]
-    public void ParallelMultiplication_LargeMatrices_MatchesSequentialResult()
+    public void ParallelMultiplication_BigMatrices_MatchesSequentialResult()
     {
         int size = 100;
-        int[][] matrix1 = GenerateLargeMatrix(size, size);
-        int[][] matrix2 = GenerateLargeMatrix(size, size);
+        int[][] matrix1 = GenerateBigMatrix(size, size);
+        int[][] matrix2 = GenerateBigMatrix(size, size);
 
         var sequentialMultiplier = new SequentialMultiplier();
         var parallelMultiplier = new ParallelMultiplier();
@@ -97,12 +117,20 @@ public class ParallelMatrixMultiplicationTests
         }
     }
 
-    private static int[][] GenerateLargeMatrix(int rows, int cols)
+    private static int[][] GenerateBigMatrix(int rows, int cols)
     {
         var random = new Random();
-        return Enumerable.Range(0, rows)
-        .Select(_ => Enumerable.Range(0, cols)
-        .Select(_ => random.Next(1, 100)).ToArray()).ToArray();
+        var matrix = new int[rows][];
+        for (int i = 0; i < rows; ++i)
+        {
+            matrix[i] = new int[cols];
+            for (int j = 0; j < cols; ++j)
+            {
+                matrix[i][j] = random.Next(1, 100);
+            }
+        }
+
+        return matrix;
     }
 
     private static IEnumerable<TestCaseData> ParallelMultiplicationTestData()
@@ -112,3 +140,4 @@ public class ParallelMatrixMultiplicationTests
     }
 }
 #pragma warning restore SA1010 // Opening square brackets should be spaced correctly
+#pragma warning restore CS8625 // Cannot convert null literal to non-nullable reference type.
