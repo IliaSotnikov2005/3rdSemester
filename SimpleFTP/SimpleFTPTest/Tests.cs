@@ -40,6 +40,7 @@ public class Tests
     public static void StopServer()
     {
         server!.Stop();
+        server = null;
     }
 
     /// <summary>

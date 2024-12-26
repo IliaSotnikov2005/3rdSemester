@@ -31,7 +31,11 @@ public class Server(string localAddress, int port)
     /// <summary>
     /// The method that stops the server.
     /// </summary>
-    public void Stop() => this.tcpListener.Stop();
+    public void Stop()
+    {
+        this.cancellationToken.Cancel();
+        this.tcpListener.Stop();
+    }
 
     private static RequestType? GetRequestType(string input)
     {
