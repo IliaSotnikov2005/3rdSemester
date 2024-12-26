@@ -70,11 +70,11 @@ public static class Tester
 
         var tasks = testMethods.Select(async method =>
         {
-            var testAttr = (MyTestAttribute)method.GetCustomAttributes(typeof(MyTestAttribute), false).First();
+            var testAttribute = (MyTestAttribute)method.GetCustomAttributes(typeof(MyTestAttribute), false).First();
 
-            if (!string.IsNullOrEmpty(testAttr.Ignore))
+            if (!string.IsNullOrEmpty(testAttribute.Ignore))
             {
-                results.Add(new MyTestResult(method.Name, "Ignored", testAttr.Ignore));
+                results.Add(new MyTestResult(method.Name, "Ignored", testAttribute.Ignore));
                 return;
             }
 
@@ -95,16 +95,20 @@ public static class Tester
                     {
                         await Task.CompletedTask;
                     }
+
+                    if (testAttribute.Expected != null)
+                    {
+                        results.Add(new MyTestResult(method.Name, $"Failed (Expected Exception)", $"{testAttribute.Expected.Name}"));
+                        return;
+                    }
                 }
                 catch (Exception ex)
                 {
-                    if (testAttr.Expected != null && ex.InnerException!.GetType() == testAttr.Expected.GetType())
+                    if (testAttribute.Expected != null && ex.InnerException!.GetType() == testAttribute.Expected.GetType())
                     {
                         results.Add(new MyTestResult(method.Name, "Passed (Expected Exception)", string.Empty));
                         return;
                     }
-
-                    throw;
                 }
 
                 results.Add(new MyTestResult(method.Name, "Passed", string.Empty));
@@ -131,6 +135,8 @@ public static class Tester
         var beforeMethods = instance.GetType().GetMethods()
             .Where(m => m.GetCustomAttributes(typeof(BeforeAttribute), false).Length != 0);
 
+        ValidateBeforeOrAfterMethods(beforeMethods);
+
         foreach (var method in beforeMethods)
         {
             method.Invoke(instance, null);
@@ -141,6 +147,8 @@ public static class Tester
     {
         var afterMethods = instance.GetType().GetMethods()
             .Where(m => m.GetCustomAttributes(typeof(AfterAttribute), false).Length != 0);
+
+        ValidateBeforeOrAfterMethods(afterMethods);
 
         foreach (var method in afterMethods)
         {
@@ -153,6 +161,8 @@ public static class Tester
         var beforeClassMethods = testClass.GetMethods(BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic)
             .Where(m => m.GetCustomAttributes(typeof(BeforeClassAttribute), false).Length != 0);
 
+        ValidateBeforeOrAfterClassMethods(beforeClassMethods);
+
         foreach (var method in beforeClassMethods)
         {
             method.Invoke(null, null);
@@ -163,6 +173,8 @@ public static class Tester
     {
         var afterClassMethods = testClass.GetMethods(BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic)
             .Where(m => m.GetCustomAttributes(typeof(AfterClassAttribute), false).Length != 0);
+
+        ValidateBeforeOrAfterClassMethods(afterClassMethods);
 
         foreach (var method in afterClassMethods)
         {
@@ -177,28 +189,46 @@ public static class Tester
             Console.WriteLine($"{result.Name}: {result.Status} - {result.Message ?? string.Empty}");
         }
     }
-}
 
-/// <summary>
-/// Class for test result.
-/// </summary>
-/// <param name="name">Name of the test.</param>
-/// <param name="status">Status of the test.</param>
-/// <param name="message">Message of the test.</param>
-public class MyTestResult(string name, string status, string message)
-{
-    /// <summary>
-    /// Gets name.
-    /// </summary>
-    public string Name { get; } = name;
+    private static void ValidateBeforeOrAfterMethods(IEnumerable<MethodInfo> methods)
+    {
+        foreach (var method in methods)
+        {
+            if (method.IsStatic)
+            {
+                throw new InvalidOperationException($"Метод {method.Name} не может быть статическим для данного атрибута.");
+            }
 
-    /// <summary>
-    /// Gets status.
-    /// </summary>
-    public string Status { get; } = status;
+            if (method.GetParameters().Length != 0)
+            {
+                throw new InvalidOperationException($"Метод {method.Name} не может иметь параметры.");
+            }
 
-    /// <summary>
-    /// Gets message.
-    /// </summary>
-    public string Message { get; } = message;
+            if (method.ReturnType != typeof(void))
+            {
+                throw new InvalidOperationException($"Метод {method.Name} должен иметь возвращаемый тип void.");
+            }
+        }
+    }
+
+    private static void ValidateBeforeOrAfterClassMethods(IEnumerable<MethodInfo> methods)
+    {
+        foreach (var method in methods)
+        {
+            if (!method.IsStatic)
+            {
+                throw new InvalidOperationException($"Метод {method.Name} должен быть статическим для данного атрибута.");
+            }
+
+            if (method.GetParameters().Length != 0)
+            {
+                throw new InvalidOperationException($"Метод {method.Name} не может иметь параметры.");
+            }
+
+            if (method.ReturnType != typeof(void))
+            {
+                throw new InvalidOperationException($"Метод {method.Name} должен иметь возвращаемый тип void.");
+            }
+        }
+    }
 }

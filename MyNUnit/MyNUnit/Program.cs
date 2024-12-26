@@ -2,35 +2,22 @@
 // Copyright (c) IlyaSotnikov. All rights reserved.
 // </copyright>
 
-namespace MyNUnit;
+#pragma warning disable SA1200 // Using directives should be placed correctly
+using MyNUnit;
+#pragma warning restore SA1200 // Using directives should be placed correctly
 
-/// <summary>
-/// Main entry point for program.
-/// </summary>
-public class Program
+if (args.Length != 1)
 {
-    /// <summary>
-    /// Main method.
-    /// </summary>
-    /// <param name="args">Arguments for application.</param>
-    /// <returns>Task.</placeholder></returns>
-    public static async Task Main(string[] args)
-    {
-        if (args.Length != 1)
-        {
-            Console.WriteLine($"Invalid input.");
-            return;
-        }
-
-        string path = args[0];
-
-        // string path = Path.GetFullPath("../ProjectForTesting/bin/Debug/net8.0");
-        if (!Directory.Exists(path))
-        {
-            Console.WriteLine($"File '{path}' not found.");
-            return;
-        }
-
-        await Tester.RunTestAndPrintResultsAsync(path);
-    }
+    Console.WriteLine($"Invalid input. Expected 1 argument: path to the directory.");
+    return;
 }
+
+string path = args[0];
+
+if (!Directory.Exists(path))
+{
+    Console.WriteLine($"File '{path}' not found.");
+    return;
+}
+
+await Tester.RunTestAndPrintResultsAsync(path);

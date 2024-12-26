@@ -1,4 +1,4 @@
-// <copyright file="TestAttributes.cs" company="IlyaSotnikov">
+// <copyright file="MyTestAttribute.cs" company="IlyaSotnikov">
 // Copyright (c) IlyaSotnikov. All rights reserved.
 // </copyright>
 
@@ -43,36 +43,4 @@ public class MyTestAttribute : Attribute
     /// Gets comment why ignore the test.
     /// </summary>
     public string? Ignore { get; }
-}
-
-/// <summary>
-/// Attribute for method that runs before the test.
-/// </summary>
-[AttributeUsage(AttributeTargets.Method)]
-public class BeforeAttribute : Attribute
-{
-}
-
-/// <summary>
-/// Attribute for method that runs after the test.
-/// </summary>
-[AttributeUsage(AttributeTargets.Method)]
-public class AfterAttribute : Attribute
-{
-}
-
-/// <summary>
-/// Attribute for method that runs before the test class.
-/// </summary>
-[AttributeUsage(AttributeTargets.Method)]
-public class BeforeClassAttribute : Attribute
-{
-}
-
-/// <summary>
-/// Attribute for method that runs after the test class.
-/// </summary>
-[AttributeUsage(AttributeTargets.Method)]
-public class AfterClassAttribute : Attribute
-{
 }

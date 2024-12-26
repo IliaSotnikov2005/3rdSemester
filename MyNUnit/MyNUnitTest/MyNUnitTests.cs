@@ -12,10 +12,10 @@ public class Tests
 
         var expected = new List<MyTestResult>
         {
-        new ("Test_ShouldBePassed", "Passed", ""),
-        new ("Test_ShouldBeIgnored", "Ignored", "ignore"),
-        new ("Test_ShouldBeFailed", "Failed", "Exception has been thrown by the target of an invocation."),
-        new ("Test_ShouldThrowException", "Passed", "")
+            new ("Test_ShouldBePassed", "Passed", ""),
+            new ("Test_ShouldBeIgnored", "Ignored", "ignore"),
+            new ("Test_ShouldBeFailed", "Failed", "Exception has been thrown by the target of an invocation."),
+            new ("Test_ShouldThrowException", "Passed", "")
         };
 
         for (int i = 0; i < res.Count; ++i)
