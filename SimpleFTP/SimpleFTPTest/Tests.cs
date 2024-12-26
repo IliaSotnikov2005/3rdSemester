@@ -36,7 +36,7 @@ public class Tests
     /// Stops the server.
     /// </summary>
     [TearDown]
-    public static async void StopServer()
+    public static async Task StopServer()
     {
         await server!.StopAsync();
         server = null;
