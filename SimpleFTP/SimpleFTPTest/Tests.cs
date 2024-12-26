@@ -4,6 +4,7 @@
 
 namespace SimpleFTPTest;
 
+using System.Net;
 using System.Net.Sockets;
 using NUnit.Framework;
 using SimpleFTP;
@@ -20,26 +21,26 @@ public class Tests
     private static readonly string Subfolder = $"files{DirectorySeparator}subfolder";
     private static readonly string TextFile = $"files{DirectorySeparator}text.txt";
     private static readonly string JpgFile = $"files{DirectorySeparator}subfolder{DirectorySeparator}frede.jpg";
-    private static Server? server;
+    private static Server? server = null;
 
     /// <summary>
     /// Runs the server.
     /// </summary>
     [SetUp]
-    public static void SetupServerAsync()
+    public static void SetupServer()
     {
-        server = new Server("127.0.0.2", Port);
+        server = new Server(IPAddress.Any.ToString(), Port);
         server.Start();
     }
 
     /// <summary>
     /// Stops the server.
     /// </summary>
+    /// <returns>Task.</returns>
     [TearDown]
     public static async Task StopServer()
     {
         await server!.StopAsync();
-        server = null;
     }
 
     /// <summary>

@@ -34,11 +34,12 @@ public class Server(string localAddress, int port)
     /// <returns>Task.</returns>
     public async Task StopAsync()
     {
-        if (this.listenTask != null)
+        this.cancellationToken.Cancel();
+        this.tcpListener.Stop();
+
+        if (listenTask != null)
         {
-            this.cancellationToken.Cancel();
-            await this.listenTask!;
-            this.tcpListener.Stop();
+            await this.listenTask;
         }
     }
 
