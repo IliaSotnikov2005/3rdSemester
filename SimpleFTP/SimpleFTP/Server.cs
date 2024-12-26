@@ -43,6 +43,8 @@ public class Server(string localAddress, int port)
         }
     }
 
+    public void Dispose() => this.StopAsync().Wait();
+
     private static RequestType? GetRequestType(string input)
     {
         if (Enum.TryParse<RequestType>(input, out var requestType))

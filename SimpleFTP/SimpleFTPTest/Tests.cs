@@ -36,11 +36,10 @@ public class Tests
     /// <summary>
     /// Stops the server.
     /// </summary>
-    /// <returns>Task.</returns>
     [TearDown]
-    public static async Task StopServer()
+    public static void StopServer()
     {
-        await server!.StopAsync();
+        server?.Dispose();
     }
 
     /// <summary>

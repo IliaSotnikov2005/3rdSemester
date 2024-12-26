@@ -10,7 +10,7 @@ using System.Net.Sockets;
 /// Client class.
 /// </summary>
 /// <param name="hostName">The name of host.</param>
-/// <param name="port">THe port.</param>
+/// <param name="port">The port.</param>
 public class Client(string hostName, int port)
 {
     /// <summary>
