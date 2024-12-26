@@ -71,7 +71,6 @@ public class MyThreadPool
             return;
         }
 
-        this.cancellationSource.Cancel();
         foreach (var thread in this.threads)
         {
             thread.Join();
@@ -80,7 +79,7 @@ public class MyThreadPool
 
     private void PerformTasks(CancellationToken cancellationToken)
     {
-        while (!cancellationToken.IsCancellationRequested)
+        while (!cancellationToken.IsCancellationRequested || this.tasksQueue.Count > 0)
         {
             this.gettingStarted.WaitOne();
             Action? task = null;
@@ -132,15 +131,7 @@ public class MyThreadPool
         {
             get
             {
-                while (!this.IsCompleted)
-                {
-                    if (cancellationToken.IsCancellationRequested)
-                    {
-                        throw new TaskCanceledException();
-                    }
-
-                    this.resultReadiness.WaitOne();
-                }
+                this.resultReadiness.WaitOne();
 
                 if (this.thrownException != null)
                 {

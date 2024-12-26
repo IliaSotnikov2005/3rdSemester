@@ -151,7 +151,6 @@ public class Tests
         var threadPool = new MyThreadPool(numberOfThreads);
         var task = threadPool.Submit(() => "12" + "34").ContinueWith((number) => int.Parse(number.ToArray()));
         AssertBlock(task, 1234);
-
         threadPool.Shutdown();
     }
 
