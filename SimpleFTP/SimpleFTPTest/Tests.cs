@@ -28,7 +28,7 @@ public class Tests
     [SetUp]
     public static void SetupServerAsync()
     {
-        server = new Server("127.0.0.1", Port);
+        server = new Server("127.0.0.2", Port);
         server.Start();
     }
 
