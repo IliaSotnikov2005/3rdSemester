@@ -65,11 +65,11 @@ public class Tests
     /// </summary>
     /// <returns>Task.</returns>
     [Test]
-    public static async Task Test_ListRequestToNotExistingDirectory_ReturnEmpty()
+    public static async Task Test_ListRequestToNotExistingDirectory_ReturnNull()
     {
         var client = new Client(HostName, Port);
         var content = await client.List("not_exist");
-        Assert.That(content, Is.Empty);
+        Assert.That(content, Is.Null);
     }
 
     /// <summary>
@@ -166,11 +166,11 @@ public class Tests
     /// </summary>
     /// <returns>Task.</returns>
     [Test]
-    public static async Task Test_GetRequestForNotExistingFile_ReturnsEmpty()
+    public static async Task Test_GetRequestForNotExistingFile_ReturnsNull()
     {
         var client = new Client(HostName, Port);
         var content = await client.Get("notexist.txt");
-        Assert.That(content, Is.Empty);
+        Assert.That(content, Is.Null);
     }
 
     /// <summary>
