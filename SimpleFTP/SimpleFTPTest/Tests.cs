@@ -25,21 +25,20 @@ public class Tests
     /// <summary>
     /// Runs the server.
     /// </summary>
-    /// <returns>Task.</returns>
     [SetUp]
-    public static async Task SetupServerAsync()
+    public static void SetupServerAsync()
     {
         server = new Server("127.0.0.1", Port);
-        await server.StartAsync();
+        server.Start();
     }
 
     /// <summary>
     /// Stops the server.
     /// </summary>
     [TearDown]
-    public static void StopServer()
+    public static async void StopServer()
     {
-        server!.Stop();
+        await server!.StopAsync();
         server = null;
     }
 

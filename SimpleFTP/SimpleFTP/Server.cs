@@ -16,25 +16,30 @@ public class Server(string localAddress, int port)
 {
     private readonly TcpListener tcpListener = new (IPAddress.Parse(localAddress), port);
     private CancellationTokenSource cancellationToken = new ();
+    private Task? listenTask;
 
     /// <summary>
     /// The method that starts the server.
     /// </summary>
-    /// <returns>Task.</returns>
-    public async Task StartAsync()
+    public void Start()
     {
         this.cancellationToken = new CancellationTokenSource();
         this.tcpListener.Start();
-        await this.Listen();
+        this.listenTask = this.Listen();
     }
 
     /// <summary>
     /// The method that stops the server.
     /// </summary>
-    public void Stop()
+    /// <returns>Task.</returns>
+    public async Task StopAsync()
     {
-        this.cancellationToken.Cancel();
-        this.tcpListener.Stop();
+        if (this.listenTask != null)
+        {
+            this.cancellationToken.Cancel();
+            await this.listenTask!;
+            this.tcpListener.Stop();
+        }
     }
 
     private static RequestType? GetRequestType(string input)
