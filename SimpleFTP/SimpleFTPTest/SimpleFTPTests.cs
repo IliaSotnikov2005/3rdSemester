@@ -180,7 +180,7 @@ public class SimpleFTPTests
     public static void Test_MultipleGetRequestGetsFromOneClient()
     {
         int numberOfRequests = 4;
-        var tasks = new Task<byte[]>[numberOfRequests];
+        var tasks = new Task<byte[]?>[numberOfRequests];
         var client = new Client(HostName, Port);
         for (int i = 0; i < numberOfRequests; ++i)
         {
@@ -209,7 +209,7 @@ public class SimpleFTPTests
     public static void Test_GetRequestsFromDifferentClients()
     {
         int numberOfClients = 5;
-        var tasks = new Task<byte[]>[numberOfClients];
+        var tasks = new Task<byte[]?>[numberOfClients];
         for (int i = 0; i < numberOfClients; ++i)
         {
             var client = new Client(HostName, Port);

@@ -9,5 +9,8 @@
 using System.Diagnostics.CodeAnalysis;
 
 #pragma warning disable SA1404 // Code analysis suppression should have justification
+[assembly: SuppressMessage("StyleCop.CSharp.SpacingRules", "SA1011:Closing square brackets should be spaced correctly", Justification = "<Pending>", Scope = "member", Target = "~M:SimpleFTP.Client.GetResponseToListRequestAsync(System.IO.Stream)~System.Threading.Tasks.Task{System.ValueTuple{System.String,System.Boolean}[]}")]
+[assembly: SuppressMessage("StyleCop.CSharp.SpacingRules", "SA1011:Closing square brackets should be spaced correctly", Justification = "<Pending>", Scope = "member", Target = "~M:SimpleFTP.Client.Get(System.String)~System.Threading.Tasks.Task{System.Byte[]}")]
+[assembly: SuppressMessage("StyleCop.CSharp.SpacingRules", "SA1011:Closing square brackets should be spaced correctly", Justification = "<Pending>", Scope = "member", Target = "~M:SimpleFTP.Client.GetResponseToGetRequestAsync(System.IO.Stream)~System.Threading.Tasks.Task{System.Byte[]}")]
 [assembly: SuppressMessage("StyleCop.CSharp.SpacingRules", "SA1011:Closing square brackets should be spaced correctly", Justification = "<Pending>", Scope = "member", Target = "~M:SimpleFTP.Client.List(System.String)~System.Threading.Tasks.Task{System.ValueTuple{System.String,System.Boolean}[]}")]
 #pragma warning restore SA1404 // Code analysis suppression should have justification

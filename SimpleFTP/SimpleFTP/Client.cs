@@ -44,7 +44,7 @@ public class Client(string hostName, int port)
     /// </summary>
     /// <param name="path">The path to file on the server.</param>
     /// <returns>Byte array.</returns>
-    public async Task<byte[]> Get(string path)
+    public async Task<byte[]?> Get(string path)
     {
         using var client = new TcpClient(this.HostName, this.Port);
         var stream = client.GetStream();
@@ -55,9 +55,7 @@ public class Client(string hostName, int port)
         return await GetResponseToGetRequestAsync(stream);
     }
 
-#pragma warning disable SA1011 // Closing square brackets should be spaced correctly
     private static async Task<(string, bool)[]?> GetResponseToListRequestAsync(Stream stream)
-#pragma warning restore SA1011 // Closing square brackets should be spaced correctly
     {
         using var reader = new StreamReader(stream);
         var response = await reader.ReadLineAsync();
@@ -86,9 +84,7 @@ public class Client(string hostName, int port)
         return directoryItems;
     }
 
-#pragma warning disable SA1011 // Closing square brackets should be spaced correctly
     private static async Task<byte[]?> GetResponseToGetRequestAsync(Stream stream)
-#pragma warning restore SA1011 // Closing square brackets should be spaced correctly
     {
         using var reader = new BinaryReader(stream);
 
