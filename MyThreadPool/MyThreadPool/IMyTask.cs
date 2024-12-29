@@ -1,7 +1,7 @@
 // <copyright file="IMyTask.cs" company="IlyaSotnikov">
 // Copyright (c) IlyaSotnikov. All rights reserved.
 // </copyright>
-namespace MyThreadPool;
+namespace MyThreadPoolSpace;
 
 /// <summary>
 /// The interface representing the task.

@@ -4,13 +4,12 @@
 
 namespace MyThreadPoolTests;
 
-using NUnit.Framework;
-using MyThreadPool;
+using MyThreadPoolSpace;
 
 /// <summary>
 /// Tests for <see cref="MyThreadPool"/>.
 /// </summary>
-public class Tests
+public class MyThreadPoolTests
 {
     /// <summary>
     /// Tests that number of active threads is equal to number of threads given to the constructor.
@@ -153,7 +152,7 @@ public class Tests
     {
         var numberOfThreads = 2;
         var threadPool = new MyThreadPool(numberOfThreads);
-        var task = threadPool.Submit(() => "12" + "34").ContinueWith((number) => int.Parse(number.ToArray()));
+        var task = threadPool.Submit(() => "12" + "34").ContinueWith((number) => int.Parse(number));
         AssertBlock(task, 1234);
         threadPool.Shutdown();
     }
@@ -190,6 +189,122 @@ public class Tests
         threadPool.Shutdown();
 
         Assert.That(flag, Is.True);
+    }
+
+    /// <summary>
+    /// Tests that thread pool thread safety with Submit and Shutdown.
+    /// </summary>
+    [Test]
+    public static void Test_ThreadSafety_MethodsCalledFromMultipleThreads()
+    {
+        var numberOfThreads = 4;
+        var threadPool = new MyThreadPool(numberOfThreads);
+        var tasksCount = 10;
+        var exceptions = new List<Exception>();
+
+        var tasks = new List<IMyTask<string>>();
+
+        var submitThread = new Thread(() =>
+        {
+            for (int i = 0; i < tasksCount; i++)
+            {
+                try
+                {
+                    var task = threadPool.Submit(() =>
+                    {
+                        Thread.Sleep(100);
+                        return $"Task {i} completed";
+                    });
+                    tasks.Add(task);
+                }
+                catch (Exception ex)
+                {
+                    exceptions.Add(ex);
+                }
+            }
+        });
+
+        var shutdownThread = new Thread(() =>
+        {
+            Thread.Sleep(100);
+            try
+            {
+                threadPool.Shutdown();
+            }
+            catch (Exception ex)
+            {
+                exceptions.Add(ex);
+            }
+        });
+
+        submitThread.Start();
+        shutdownThread.Start();
+
+        submitThread.Join();
+        shutdownThread.Join();
+
+        Assert.That(exceptions, Is.Empty);
+
+        foreach (var task in tasks)
+        {
+            Assert.That(task.IsCompleted, Is.True);
+        }
+    }
+
+    /// <summary>
+    /// Tests that thread pool thread safety with ContinueWith and Shutdown.
+    /// </summary>
+    [Test]
+    public static void Test_ThreadSafety_ContinueWithAndShutdown()
+    {
+        var numberOfThreads = 4;
+        var threadPool = new MyThreadPool(numberOfThreads);
+        var tasksCount = 10;
+        var exceptions = new List<Exception>();
+
+        var tasks = new List<IMyTask<int>>();
+
+        var continueWithThread = new Thread(() =>
+        {
+            for (int i = 0; i < tasksCount; i++)
+            {
+                try
+                {
+                    var locali = i;
+                    var task = threadPool.Submit(() => locali);
+                    var continuedTask = task.ContinueWith((result) =>
+                    {
+                        Thread.Sleep(100);
+                        return result + 1;
+                    });
+
+                    tasks.Add(continuedTask);
+                }
+                catch (Exception ex)
+                {
+                    exceptions.Add(ex);
+                }
+            }
+        });
+
+        var shutdownThread = new Thread(() =>
+        {
+            Thread.Sleep(200);
+            threadPool.Shutdown();
+        });
+
+        continueWithThread.Start();
+        shutdownThread.Start();
+
+        continueWithThread.Join();
+        shutdownThread.Join();
+
+        Assert.That(exceptions, Is.Empty);
+
+        foreach (var task in tasks)
+        {
+            Assert.That(task.IsCompleted, Is.True);
+        }
     }
 
     private static void AssertBlock<T>(IMyTask<T> task, T expected)

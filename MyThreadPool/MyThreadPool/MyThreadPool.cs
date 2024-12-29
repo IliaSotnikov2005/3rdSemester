@@ -2,17 +2,24 @@
 // Copyright (c) IlyaSotnikov. All rights reserved.
 // </copyright>
 
-namespace MyThreadPool;
+namespace MyThreadPoolSpace;
+
+using System.Threading;
 
 /// <summary>
 /// Represents a thread pool for executing tasksin multiple threads.
 /// </summary>
 public class MyThreadPool
 {
+    private readonly Queue<Action> tasksQueue = new();
     private readonly Thread[] threads;
-    private readonly Queue<Action> tasksQueue = new ();
-    private readonly CancellationTokenSource cancellationSource = new ();
-    private readonly AutoResetEvent gettingStarted = new (false);
+    private readonly CancellationTokenSource cancellationSource = new();
+    private readonly AutoResetEvent gettingStarted = new(false);
+
+    /// <summary>
+    /// The number of tasks for which a result has not yet been received.
+    /// </summary>
+    private volatile int remainingResults = 0;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="MyThreadPool"/> class.
@@ -27,13 +34,17 @@ public class MyThreadPool
         }
 
         this.threads = new Thread[numberOfThreads];
-
         for (int i = 0; i < numberOfThreads; ++i)
         {
             this.threads[i] = new Thread(() => this.PerformTasks(this.cancellationSource.Token));
             this.threads[i].Start();
         }
     }
+
+    /// <summary>
+    /// Gets a value indicating whether thread pool shutted down.
+    /// </summary>
+    public bool ShuttedDown { get; private set; } = false;
 
     /// <summary>
     /// Adds a new task to the pool.
@@ -46,7 +57,7 @@ public class MyThreadPool
     {
         if (this.cancellationSource.IsCancellationRequested)
         {
-            throw new OperationCanceledException("The threadpool was shutted down.", this.cancellationSource.Token);
+            throw new AggregateException("Thread pool was shutted down.");
         }
 
         var newTask = new MyTask<TResult>(function, this, this.cancellationSource.Token);
@@ -55,6 +66,8 @@ public class MyThreadPool
         {
             this.tasksQueue.Enqueue(newTask.Start);
         }
+
+        Interlocked.Increment(ref this.remainingResults);
 
         this.gettingStarted.Set();
 
@@ -71,18 +84,51 @@ public class MyThreadPool
             return;
         }
 
+        this.cancellationSource.Cancel();
+
         foreach (var thread in this.threads)
         {
             thread.Join();
         }
+
+        this.ShuttedDown = true;
+    }
+
+    /// <summary>
+    /// Adds continuing task to the pool.
+    /// </summary>
+    /// <param name="continuingTaskStartAction">Continuing task start action.</param>
+    internal void AddContinuingTask(Action continuingTaskStartAction)
+    {
+        lock (this.tasksQueue)
+        {
+            this.tasksQueue.Enqueue(continuingTaskStartAction);
+        }
+
+        this.gettingStarted.Set();
+    }
+
+    /// <summary>
+    /// Increments remaining resulst.
+    /// </summary>
+    internal void IncrementRemainingResults()
+    {
+        Interlocked.Increment(ref this.remainingResults);
+    }
+
+    /// <summary>
+    /// Decrements remaining resulst.
+    /// </summary>
+    internal void DecrementRemainingResults()
+    {
+        Interlocked.Decrement(ref this.remainingResults);
     }
 
     private void PerformTasks(CancellationToken cancellationToken)
     {
-        while (!cancellationToken.IsCancellationRequested || this.tasksQueue.Count > 0)
+        while (!cancellationToken.IsCancellationRequested || this.remainingResults > 0)
         {
-            this.gettingStarted.WaitOne();
-            Action? task = null;
+            Action? myTask = null;
 
             lock (this.tasksQueue)
             {
@@ -91,23 +137,11 @@ public class MyThreadPool
                     continue;
                 }
 
-                task = this.tasksQueue.Dequeue();
+                myTask = this.tasksQueue.Dequeue();
             }
 
-            task();
-
-            this.gettingStarted.Set();
+            myTask();
         }
-    }
-
-    private void AddContinuingTask(Action taskStartAction)
-    {
-        lock (this.tasksQueue)
-        {
-            this.tasksQueue.Enqueue(taskStartAction);
-        }
-
-        this.gettingStarted.Set();
     }
 
     /// <summary>
@@ -116,12 +150,13 @@ public class MyThreadPool
     /// <typeparam name="TResult">The type of function result.</typeparam>
     /// <param name="function">The function to be executed.</param>
     /// <param name="threadPool">The trhread pool object.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
     public class MyTask<TResult>(Func<TResult> function, MyThreadPool threadPool, CancellationToken cancellationToken) : IMyTask<TResult>
     {
-        private readonly ManualResetEvent resultReadiness = new (false);
-        private readonly List<Action> continuingTasks = [];
+        private readonly ManualResetEvent resultReadiness = new(false);
         private TResult? result;
         private Exception? thrownException = null;
+        private List<Action> continuingTasks = [];
 
         /// <inheritdoc/>
         public bool IsCompleted { get; private set; } = false;
@@ -133,65 +168,64 @@ public class MyThreadPool
             {
                 this.resultReadiness.WaitOne();
 
-                if (this.thrownException != null)
+                if (this.thrownException is not null)
                 {
                     throw new AggregateException("Task failed.", this.thrownException);
                 }
-
-                if (this.result == null)
+                else if (this.result is null)
                 {
-                    throw new ArgumentException("Function does not return a result.");
+                    throw new ArgumentException("Function does not return a not null result.");
                 }
+
+                this.resultReadiness.Set();
 
                 return this.result;
             }
         }
 
-        /// <summary>
-        /// Starts the task.
-        /// </summary>
-        public void Start()
+        /// <inheritdoc/>
+        public IMyTask<TNewResult> ContinueWith<TNewResult>(Func<TResult, TNewResult> nextTask)
         {
             if (cancellationToken.IsCancellationRequested)
             {
-                this.resultReadiness.Set();
-                return;
+                throw new AggregateException("Thread pool is shutted down.");
             }
 
+            var continuingTask = new MyTask<TNewResult>(() => nextTask(this.Result), threadPool, cancellationToken);
+            if (this.IsCompleted)
+            {
+                threadPool.AddContinuingTask(continuingTask.Start);
+            }
+            else
+            {
+                this.continuingTasks.Add(continuingTask.Start);
+            }
+
+            Interlocked.Increment(ref threadPool.remainingResults);
+
+            return continuingTask;
+        }
+
+        /// <summary>
+        /// Starts the task.
+        /// </summary>
+        internal void Start()
+        {
             try
             {
                 this.result = function();
-                this.IsCompleted = true;
                 function = null!;
             }
             catch (Exception ex)
             {
                 this.thrownException = ex;
-                this.IsCompleted = true;
             }
 
+            this.IsCompleted = true;
             this.resultReadiness.Set();
+            Interlocked.Decrement(ref threadPool.remainingResults);
 
             this.continuingTasks.ForEach(threadPool.AddContinuingTask);
-        }
-
-        /// <inheritdoc/>
-        IMyTask<TNewResult> IMyTask<TResult>.ContinueWith<TNewResult>(Func<TResult, TNewResult> nextTask)
-        {
-            if (cancellationToken.IsCancellationRequested)
-            {
-                throw new OperationCanceledException("Thread pool was shut down");
-            }
-
-            if (this.IsCompleted)
-            {
-                return threadPool.Submit(() => nextTask(this.Result));
-            }
-
-            var continuingTask = new MyTask<TNewResult>(() => nextTask(this.Result), threadPool, cancellationToken);
-            this.continuingTasks.Add(continuingTask.Start);
-
-            return continuingTask;
         }
     }
 }
