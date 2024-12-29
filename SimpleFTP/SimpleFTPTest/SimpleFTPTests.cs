@@ -1,4 +1,4 @@
-// <copyright file="Tests.cs" company="IlyaSotnikov">
+// <copyright file="SimpleFTPTests.cs" company="IlyaSotnikov">
 // Copyright (c) IlyaSotnikov. All rights reserved.
 // </copyright>
 
@@ -12,7 +12,7 @@ using SimpleFTP;
 /// <summary>
 /// Tests for SimpleFTP.
 /// </summary>
-public class Tests
+public class SimpleFTPTests
 {
     private const string HostName = "localhost";
     private const int Port = 8080;

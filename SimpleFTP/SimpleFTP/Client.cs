@@ -66,6 +66,8 @@ public class Client(string hostName, int port)
             return null;
         }
 
+        Console.WriteLine($"{response}");
+
         var responseParts = response.Split();
         if (responseParts[0] == "-1")
         {
@@ -84,14 +86,16 @@ public class Client(string hostName, int port)
         return directoryItems;
     }
 
-    private static async Task<byte[]> GetResponseToGetRequestAsync(Stream stream)
+#pragma warning disable SA1011 // Closing square brackets should be spaced correctly
+    private static async Task<byte[]?> GetResponseToGetRequestAsync(Stream stream)
+#pragma warning restore SA1011 // Closing square brackets should be spaced correctly
     {
         using var reader = new BinaryReader(stream);
 
         long size = reader.ReadInt64();
         if (size == -1)
         {
-            return [];
+            return null;
         }
 
         var response = new byte[size];
