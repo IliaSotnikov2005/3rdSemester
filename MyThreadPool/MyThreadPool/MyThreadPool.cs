@@ -108,22 +108,6 @@ public class MyThreadPool
         this.gettingStarted.Set();
     }
 
-    /// <summary>
-    /// Increments remaining resulst.
-    /// </summary>
-    internal void IncrementRemainingResults()
-    {
-        Interlocked.Increment(ref this.remainingResults);
-    }
-
-    /// <summary>
-    /// Decrements remaining resulst.
-    /// </summary>
-    internal void DecrementRemainingResults()
-    {
-        Interlocked.Decrement(ref this.remainingResults);
-    }
-
     private void PerformTasks(CancellationToken cancellationToken)
     {
         while (!cancellationToken.IsCancellationRequested || this.remainingResults > 0)
