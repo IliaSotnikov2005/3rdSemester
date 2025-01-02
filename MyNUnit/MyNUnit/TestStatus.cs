@@ -1,8 +1,9 @@
 namespace MyNUnit;
 
-public enum Status
+public enum TestStatus
 {
     Passed,
     Failed,
-    Ignored
+    Ignored,
+    Errored
 }

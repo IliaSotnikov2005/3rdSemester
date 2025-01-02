@@ -5,8 +5,14 @@ public class MyTestClassResults
     public int Passed {get; private set;}
     public int Failed {get; private set;}
     public int Ignored {get; private set;}
+    public int Errored {get; private set;}
 
     public List<MyTestResult> TestResults {get; private set;} = [];
+
+    public MyTestClassResults(List<MyTestResult> results)
+    {
+        this.AddResults(results);
+    }
 
     public void AddResults(List<MyTestResult> results)
     {
@@ -14,14 +20,17 @@ public class MyTestClassResults
         {
             switch (result.Status)
             {
-                case Status.Passed:
+                case TestStatus.Passed:
                 ++Passed;
                 break;
-                case Status.Failed:
+                case TestStatus.Failed:
                 ++Failed;
                 break;
-                case Status.Ignored:
+                case TestStatus.Ignored:
                 ++Ignored;
+                break;
+                case TestStatus.Errored:
+                ++Errored;
                 break;
             }
 
