@@ -21,7 +21,10 @@ public class MyTestAttribute : Attribute
     /// Initializes a new instance of the <see cref="MyTestAttribute"/> class.
     /// </summary>
     /// <param name="expected">Expected exception.</param>
-    public MyTestAttribute(Type expected) => this.Expected = expected;
+    public MyTestAttribute(Type expected)
+    {
+        this.Expected = expected;
+    }
 
     /// <summary>
     /// Initializes a new instance of the <see cref="MyTestAttribute"/> class.
@@ -37,10 +40,10 @@ public class MyTestAttribute : Attribute
     /// <summary>
     /// Gets expected exception.
     /// </summary>
-    public Type? Expected { get; }
+    public Type? Expected { get; private set; } = null;
 
     /// <summary>
     /// Gets comment why ignore the test.
     /// </summary>
-    public string? Ignore { get; }
+    public string? Ignore { get; private set; } = string.Empty;
 }
