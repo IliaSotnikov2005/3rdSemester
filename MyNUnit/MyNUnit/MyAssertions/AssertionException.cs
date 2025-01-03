@@ -1,4 +1,4 @@
-// <copyright file="MyAssert.cs" company="IlyaSotnikov">
+// <copyright file="AssertionException.cs" company="IlyaSotnikov">
 // Copyright (c) IlyaSotnikov. All rights reserved.
 // </copyright>
 

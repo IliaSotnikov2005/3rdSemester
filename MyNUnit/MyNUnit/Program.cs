@@ -1,13 +1,16 @@
-﻿using MyNUnit;
+﻿// <copyright file="Program.cs" company="IlyaSotnikov">
+// Copyright (c) IlyaSotnikov. All rights reserved.
+// </copyright>
+
+using MyNUnit;
 
 if (args.Length != 1)
 {
-    //Console.WriteLine($"Invalid input. Expected 1 argument: path to the assembly.");
-    //return;
+    Console.WriteLine($"Invalid input. Expected 1 argument: path to the assembly.");
+    return;
 }
 
-//string path1 = args[0];
-string path = Path.GetFullPath("../../../../ProjectForTesting/bin/Debug/net9.0");
+string path = args[0];
 
 if (!Directory.Exists(path))
 {
@@ -56,11 +59,11 @@ void PrintTestResult(MyTestResult testResult)
     }
 
     Console.WriteLine($"- {testResult.Name}: {testResult.Status};");
-    Console.WriteLine($"Time elapsed: {testResult.GetFormattedTimeElapsed()} ms");
+    Console.WriteLine($"Time elapsed: {testResult.GetFormattedTimeElapsed()} s");
     if (!string.IsNullOrEmpty(testResult.Message))
     {
         Console.WriteLine($"Message: {testResult.Message}");
     }
-    
+
     Console.ResetColor();
 }

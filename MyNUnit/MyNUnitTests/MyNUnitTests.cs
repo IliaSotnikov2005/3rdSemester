@@ -1,10 +1,30 @@
-﻿namespace MyNUnitTest;
+﻿// <copyright file="MyNUnitTests.cs" company="IlyaSotnikov">
+// Copyright (c) IlyaSotnikov. All rights reserved.
+// </copyright>
 
-using NUnit.Framework;
+namespace MyNUnitTest;
+
 using MyNUnit;
+using NUnit.Framework;
 
-public class Tests
+/// <summary>
+/// Tests for MyNUnit.
+/// </summary>
+public class MyNUnitTests
 {
+    /// <summary>
+    /// Checks that throws exception if path not exists.
+    /// </summary>
+    [Test]
+    public static void Test_ThrowsDirectoryNotFoundException()
+    {
+        Assert.ThrowsAsync<DirectoryNotFoundException>(async () => await MyTester.RunTestsFromDirectoty("bambam/net8.0"));
+    }
+
+    /// <summary>
+    /// Checks that tests runs correctly.
+    /// </summary>
+    /// <returns>Task.</returns>
     [Test]
     public async Task Test_RunsTestsCorrectly()
     {
@@ -12,25 +32,19 @@ public class Tests
 
         var expected = new List<MyTestResult>
         {
-        new ("Test_ShouldBePassed", TestStatus.Passed, ""),
-        new ("Test_ShouldBeIgnored", TestStatus.Ignored, "ignore"),
-        new ("Test_ShouldBeFailed", TestStatus.Failed, "Exception has been thrown by the target of an invocation."),
-        new ("Test_ShouldThrowException", TestStatus.Passed, "")
+        new("Test_ShouldBePassed", TestStatus.Passed, string.Empty),
+        new("Test_ShouldBeIgnored", TestStatus.Ignored, "ignore"),
+        new("Test_ShouldBeFailed", TestStatus.Failed, "Exception has been thrown by the target of an invocation."),
+        new("Test_ShouldThrowException", TestStatus.Passed, "Throwed expected exception."),
         };
 
         foreach (var testClass in result)
         {
             for (int i = 0; i < testClass.TestResults.Count; ++i)
             {
-                Assert.That(Comparer(testClass.TestResults[i], expected[i]), Is.True);
+                Assert.That(this.Comparer(testClass.TestResults[i], expected[i]), Is.True);
             }
         }
-    }
-
-    [Test]
-    public static void Test_ThrowsDirectoryNotFoundException()
-    {
-        Assert.ThrowsAsync<DirectoryNotFoundException>(async () => await MyTester.RunTestsFromDirectoty("bambam/net8.0"));
     }
 
     private bool Comparer(MyTestResult actual, MyTestResult expected)

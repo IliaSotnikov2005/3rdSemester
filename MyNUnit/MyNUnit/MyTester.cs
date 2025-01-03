@@ -1,11 +1,22 @@
-using System.Reflection.Metadata.Ecma335;
+// <copyright file="MyTester.cs" company="IlyaSotnikov">
+// Copyright (c) IlyaSotnikov. All rights reserved.
+// </copyright>
 
 namespace MyNUnit;
 
 using System.Reflection;
 
+/// <summary>
+/// Class for running test classes.
+/// </summary>
 public static class MyTester
 {
+    /// <summary>
+    /// Runs test classes from assemblies from directory.
+    /// </summary>
+    /// <param name="path">Path to the assemblies.</param>
+    /// <returns>List of test classes results.</returns>
+    /// <exception cref="DirectoryNotFoundException">Throws if directory not found.</exception>
     public static async Task<List<MyTestClassResults>> RunTestsFromDirectoty(string path)
     {
         if (!Directory.Exists(path))
@@ -26,18 +37,18 @@ public static class MyTester
     {
         var assembliesNames = Directory.GetFiles(path, "*.dll").Select(Assembly.LoadFrom);
 
-        var TestClasses = new List<Type>();
+        var testClasses = new List<Type>();
 
         foreach (var assembly in assembliesNames)
         {
-            var TestClassesInAssembly = assembly.GetTypes().Where(t => t.GetMethods().Any(m => m.GetCustomAttributes(typeof(MyTestAttribute), false).Length != 0));
-            foreach (var testClass in TestClassesInAssembly)
+            var testClassesInAssembly = assembly.GetTypes().Where(t => t.GetMethods().Any(m => m.GetCustomAttributes(typeof(MyTestAttribute), false).Length != 0));
+            foreach (var testClass in testClassesInAssembly)
             {
-                TestClasses.Add(testClass);
+                testClasses.Add(testClass);
             }
         }
 
-        return TestClasses;
+        return testClasses;
     }
 
     private static async Task<MyTestClassResults> RunTestClass(Type testClass)
@@ -103,17 +114,23 @@ public static class MyTester
                     await Task.CompletedTask;
                 }
 
+                if (testAttribute.Expected is not null)
+                {
+                    testClassResults.Add(new MyTestResult(method.Name, TestStatus.Failed, "Expected exception was not thrown.", DateTime.Now - startTime));
+                    return;
+                }
+
                 testClassResults.Add(new MyTestResult(method.Name, TestStatus.Passed, string.Empty, DateTime.Now - startTime));
             }
             catch (Exception ex)
             {
-                if (testAttribute.Expected is not null && ex.InnerException!.GetType() == testAttribute.Expected.GetType())
+                if (testAttribute.Expected is not null && ex.InnerException!.GetType() == testAttribute.Expected)
                 {
                     testClassResults.Add(new MyTestResult(method.Name, TestStatus.Passed, "Throwed expected exception.", DateTime.Now - startTime));
                     return;
                 }
 
-                testClassResults.Add(new MyTestResult(method.Name, TestStatus.Failed, ex.Message));
+                testClassResults.Add(new MyTestResult(method.Name, TestStatus.Failed, ex.Message, DateTime.Now - startTime));
             }
             finally
             {
@@ -200,20 +217,20 @@ public static class MyTester
     }
 
     private static void ValidateMethod(MethodInfo method, bool mustBeStatic)
-{
-    if (method.IsStatic != mustBeStatic && mustBeStatic)
     {
-        throw new InvalidOperationException($"Method {method.Name} must be {(mustBeStatic ? "static" : "instance")}");
-    }
+        if (method.IsStatic != mustBeStatic && mustBeStatic)
+        {
+            throw new InvalidOperationException($"Method {method.Name} must be {(mustBeStatic ? "static" : "instance")}");
+        }
 
-    if (method.GetParameters().Length != 0)
-    {
-        throw new InvalidOperationException($"Method {method.Name} should not have parameters");
-    }
+        if (method.GetParameters().Length != 0)
+        {
+            throw new InvalidOperationException($"Method {method.Name} should not have parameters");
+        }
 
-    if (method.ReturnType != typeof(void))
-    {
-        throw new InvalidOperationException($"Method {method.Name} should not have a return type");
+        if (method.ReturnType != typeof(void))
+        {
+            throw new InvalidOperationException($"Method {method.Name} should not have a return type");
+        }
     }
-}
 }

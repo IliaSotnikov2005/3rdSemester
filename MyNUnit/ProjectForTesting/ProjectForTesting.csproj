@@ -9,5 +9,8 @@
   <ItemGroup>
     <ProjectReference Include="../MyNUnit/MyNUnit.csproj" />
   </ItemGroup>
+  <ItemGroup>
+    <AdditionalFiles Include="stylecop.json" />
+  </ItemGroup>
 
 </Project>

@@ -23,5 +23,8 @@
   <ItemGroup>
     <Using Include="NUnit.Framework" />
   </ItemGroup>
+  <ItemGroup>
+    <AdditionalFiles Include="stylecop.json" />
+  </ItemGroup>
 
 </Project>
