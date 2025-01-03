@@ -1,4 +1,4 @@
-// <copyright file="TestAttributes.cs" company="IlyaSotnikov">
+// <copyright file="MyTestAttribute.cs" company="IlyaSotnikov">
 // Copyright (c) IlyaSotnikov. All rights reserved.
 // </copyright>
 
