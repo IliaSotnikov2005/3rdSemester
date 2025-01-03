@@ -5,25 +5,25 @@
 namespace MyNUnit;
 
 /// <summary>
-/// Class for test result.
+/// Record for test result.
 /// </summary>
-/// <param name="name">Name of the test.</param>
-/// <param name="status">Status of the test.</param>
-/// <param name="message">Message of the test.</param>
-public record MyTestResult(string name, string status, string message)
+/// <param name="Name">Name of the test.</param>
+/// <param name="Status">Status of the test.</param>
+/// <param name="Message">Message of the test.</param>
+/// <param name="TimeElapsed">Time elapsed by the test.</param>
+public record MyTestResult(string Name, TestStatus Status, string Message, TimeSpan TimeElapsed = default)
 {
     /// <summary>
-    /// Gets name.
+    /// Gets the status of the test run.
     /// </summary>
-    public string Name { get; } = name;
+    public TestStatus Status { get; internal set; } = Status;
 
     /// <summary>
-    /// Gets status.
+    /// Gets formatted time elapsed.
     /// </summary>
-    public string Status { get; } = status;
-
-    /// <summary>
-    /// Gets message.
-    /// </summary>
-    public string Message { get; } = message;
+    /// <returns>Formatted time elapsed.</returns>
+    public string GetFormattedTimeElapsed()
+    {
+        return $"{(int)this.TimeElapsed.TotalSeconds}.{this.TimeElapsed.Milliseconds}";
+    }
 }
