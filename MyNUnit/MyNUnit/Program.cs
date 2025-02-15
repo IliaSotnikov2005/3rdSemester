@@ -3,8 +3,9 @@
 // </copyright>
 
 using MyNUnit;
+using System.Net.WebSockets;
 
-if (args.Length != 1)
+if (args.Length != 1 && false)
 {
     Console.WriteLine($"Invalid input. Expected 1 argument: path to the assembly.");
     return;
@@ -18,32 +19,41 @@ if (!Directory.Exists(path))
     return;
 }
 
-var testsResults = await MyTester.RunTestsFromDirectoty(path);
+var tester = new MyTester();
+var testsResults = await tester.RunTestsFromDirectory(path);
 PrintTestsResults(testsResults);
 
-void PrintTestsResults(List<MyTestClassResults> results)
+void PrintTestsResults(TestRunResult results)
 {
-    foreach (var testClassResult in results)
+    foreach (var testAssemblyResult in results.TestAssemblyResults)
     {
-        Console.ForegroundColor = ConsoleColor.Cyan;
-        Console.WriteLine($"Test Class Results:");
-        Console.ResetColor();
+        Console.WriteLine($"Test assembly: {testAssemblyResult.AssemblyName}");
+        Console.WriteLine($"Passed: {testAssemblyResult.Passed}");
+        Console.WriteLine($"Failed: {testAssemblyResult.Failed}");
+        Console.WriteLine($"Ignored: {testAssemblyResult.Ignored}");
 
-        Console.WriteLine($"Passed: {testClassResult.Passed}");
-        Console.WriteLine($"Failed: {testClassResult.Failed}");
-        Console.WriteLine($"Ignored: {testClassResult.Ignored}");
-        Console.WriteLine($"Errored: {testClassResult.Errored}");
-
-        foreach (var testResult in testClassResult.TestResults)
+        foreach (var testClassResult in testAssemblyResult.TestClassResults)
         {
-            PrintTestResult(testResult);
-        }
+            Console.ForegroundColor = ConsoleColor.Cyan;
+            Console.WriteLine($"Test Class Results:");
+            Console.ResetColor();
 
-        Console.WriteLine();
+            Console.WriteLine($"Passed: {testClassResult.Passed}");
+            Console.WriteLine($"Failed: {testClassResult.Failed}");
+            Console.WriteLine($"Ignored: {testClassResult.Ignored}");
+            Console.WriteLine($"Errored: {testClassResult.Errored}");
+
+            foreach (var testResult in testClassResult.TestResults)
+            {
+                PrintTestResult(testResult);
+            }
+
+            Console.WriteLine();
+        }
     }
 }
 
-void PrintTestResult(MyTestResult testResult)
+void PrintTestResult(TestResult testResult)
 {
     if (testResult.Status == TestStatus.Passed)
     {

@@ -9,7 +9,7 @@ using System.Reflection;
 /// <summary>
 /// Class for running test classes.
 /// </summary>
-public static class MyTester
+public class MyTester
 {
     /// <summary>
     /// Runs test classes from assemblies from directory.
@@ -17,43 +17,39 @@ public static class MyTester
     /// <param name="path">Path to the assemblies.</param>
     /// <returns>List of test classes results.</returns>
     /// <exception cref="DirectoryNotFoundException">Throws if directory not found.</exception>
-    public static async Task<List<MyTestClassResults>> RunTestsFromDirectoty(string path)
+    public async Task<TestRunResult> RunTestsFromDirectory(string path)
     {
         if (!Directory.Exists(path))
         {
             throw new DirectoryNotFoundException($"Directory {path} not found.");
         }
 
-        var testClasses = GetTestClassesFromAssemblies(path);
+        var assemblies = Directory.GetFiles(path, "*.dll").Select(Assembly.LoadFrom);
 
-        var tasks = testClasses.Select(testClass => Task.Run(() => RunTestClass(testClass))).ToArray();
+        var tasks = assemblies.Select(RunTestClasses).ToArray();
 
         var results = await Task.WhenAll(tasks);
 
-        return [.. results];
+        var testRunResult = new TestRunResult([.. results]);
+
+        return testRunResult;
     }
 
-    private static List<Type> GetTestClassesFromAssemblies(string path)
+    public async Task<TestAssemblyResult> RunTestClasses(Assembly assembly)
     {
-        var assembliesNames = Directory.GetFiles(path, "*.dll").Select(Assembly.LoadFrom);
+        var testClassesInAssembly = assembly.GetTypes().Where(t => t.GetMethods().Any(m => m.GetCustomAttributes(typeof(MyTestAttribute), false).Length != 0));
 
-        var testClasses = new List<Type>();
+        var tasks = testClassesInAssembly.Select(RunTestClass).ToArray();
 
-        foreach (var assembly in assembliesNames)
-        {
-            var testClassesInAssembly = assembly.GetTypes().Where(t => t.GetMethods().Any(m => m.GetCustomAttributes(typeof(MyTestAttribute), false).Length != 0));
-            foreach (var testClass in testClassesInAssembly)
-            {
-                testClasses.Add(testClass);
-            }
-        }
+        var results = await Task.WhenAll(tasks);
 
-        return testClasses;
+        return new TestAssemblyResult(assembly.GetName().Name, [.. results]);
     }
 
-    private static async Task<MyTestClassResults> RunTestClass(Type testClass)
+    private static async Task<TestClassResult> RunTestClass(Type testClass)
     {
-        var testClassResults = new List<MyTestResult>();
+        var testClassName = testClass.Name;
+        var testClassResults = new List<TestResult>();
         bool classErrored = false;
 
         try
@@ -63,12 +59,12 @@ public static class MyTester
         catch (Exception ex)
         {
             classErrored = true;
-            testClassResults.Add(new MyTestResult("BeforeClass", TestStatus.Errored, ex.Message));
+            testClassResults.Add(new TestResult("BeforeClass", TestStatus.Errored, ex.Message));
         }
 
         if (classErrored)
         {
-            return new MyTestClassResults(testClassResults);
+            return new TestClassResult(testClassName, testClassResults);
         }
 
         var testMethods = testClass.GetMethods().Where(m => m.GetCustomAttributes(typeof(MyTestAttribute), false).Length != 0);
@@ -78,7 +74,7 @@ public static class MyTester
             object? instance = Activator.CreateInstance(testClass);
             if (instance is null)
             {
-                testClassResults.Add(new MyTestResult(method.Name, TestStatus.Failed, "Could not create instance"));
+                testClassResults.Add(new TestResult(method.Name, TestStatus.Failed, "Could not create instance"));
                 return;
             }
 
@@ -86,7 +82,7 @@ public static class MyTester
 
             if (!string.IsNullOrEmpty(testAttribute.Ignore))
             {
-                testClassResults.Add(new MyTestResult(method.Name, TestStatus.Ignored, testAttribute.Ignore));
+                testClassResults.Add(new TestResult(method.Name, TestStatus.Ignored, testAttribute.Ignore));
                 return;
             }
 
@@ -98,7 +94,7 @@ public static class MyTester
             }
             catch (Exception ex)
             {
-                testClassResults.Add(new MyTestResult(method.Name, TestStatus.Errored, $"Before: {ex.Message}"));
+                testClassResults.Add(new TestResult(method.Name, TestStatus.Errored, $"Before: {ex.Message}"));
                 return;
             }
 
@@ -116,21 +112,21 @@ public static class MyTester
 
                 if (testAttribute.Expected is not null)
                 {
-                    testClassResults.Add(new MyTestResult(method.Name, TestStatus.Failed, "Expected exception was not thrown.", DateTime.Now - startTime));
+                    testClassResults.Add(new TestResult(method.Name, TestStatus.Failed, "Expected exception was not thrown.", DateTime.Now - startTime));
                     return;
                 }
 
-                testClassResults.Add(new MyTestResult(method.Name, TestStatus.Passed, string.Empty, DateTime.Now - startTime));
+                testClassResults.Add(new TestResult(method.Name, TestStatus.Passed, string.Empty, DateTime.Now - startTime));
             }
             catch (Exception ex)
             {
                 if (testAttribute.Expected is not null && ex.InnerException!.GetType() == testAttribute.Expected)
                 {
-                    testClassResults.Add(new MyTestResult(method.Name, TestStatus.Passed, "Throwed expected exception.", DateTime.Now - startTime));
+                    testClassResults.Add(new TestResult(method.Name, TestStatus.Passed, "Throwed expected exception.", DateTime.Now - startTime));
                     return;
                 }
 
-                testClassResults.Add(new MyTestResult(method.Name, TestStatus.Failed, ex.Message, DateTime.Now - startTime));
+                testClassResults.Add(new TestResult(method.Name, TestStatus.Failed, ex.Message, DateTime.Now - startTime));
             }
             finally
             {
@@ -140,7 +136,7 @@ public static class MyTester
                 }
                 catch (Exception ex)
                 {
-                    testClassResults.Add(new MyTestResult(method.Name, TestStatus.Errored, $"After: {ex.Message}"));
+                    testClassResults.Add(new TestResult(method.Name, TestStatus.Errored, $"After: {ex.Message}"));
                 }
             }
         });
@@ -154,7 +150,7 @@ public static class MyTester
         catch (Exception ex)
         {
             classErrored = true;
-            testClassResults.Add(new MyTestResult("AfterClass", TestStatus.Errored, ex.Message));
+            testClassResults.Add(new TestResult("AfterClass", TestStatus.Errored, ex.Message));
         }
 
         if (classErrored)
@@ -165,7 +161,7 @@ public static class MyTester
             }
         }
 
-        return new MyTestClassResults(testClassResults);
+        return new TestClassResult(testClassName, testClassResults);
     }
 
     private static void RunBefore(object instance)
