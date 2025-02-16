@@ -3,7 +3,6 @@
 // </copyright>
 
 using MyNUnit;
-using System.Net.WebSockets;
 
 if (args.Length != 1 && false)
 {
@@ -19,8 +18,7 @@ if (!Directory.Exists(path))
     return;
 }
 
-var tester = new MyTester();
-var testsResults = await tester.RunTestsFromDirectory(path);
+var testsResults = await MyTester.RunTestsFromDirectory(path);
 PrintTestsResults(testsResults);
 
 void PrintTestsResults(TestRunResult results)

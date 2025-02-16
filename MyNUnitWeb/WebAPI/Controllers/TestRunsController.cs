@@ -23,14 +23,21 @@ public class TestRunsController : ControllerBase
     [HttpGet]
     public async Task<ActionResult<IEnumerable<TestRun>>> GetTestRuns()
     {
-        return await _context.TestRuns.Include(t => t.Result).ToListAsync();
+        return await _context.TestRuns.Include(t => t.Result).ThenInclude(r => r.TestAssemblyResults)
+           .ThenInclude(a => a.TestClassResults)
+           .ThenInclude(c => c.TestResults).ToListAsync();
     }
 
     // GET: api/TestRuns/5
     [HttpGet("{id}")]
     public async Task<ActionResult<TestRun>> GetTestRun(int id)
     {
-        var testRun = await _context.TestRuns.Include(t => t.Result).FirstOrDefaultAsync(t => t.Id == id);
+        var testRun = await _context.TestRuns
+           .Include(t => t.Result)
+           .ThenInclude(r => r.TestAssemblyResults)
+           .ThenInclude(a => a.TestClassResults)
+           .ThenInclude(c => c.TestResults)
+           .FirstOrDefaultAsync(t => t.Id == id);
 
         if (testRun == null)
         {
@@ -50,7 +57,7 @@ public class TestRunsController : ControllerBase
             return validationResult;
         }
 
-        var tempDir = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName());
+        var tempDir = Path.Combine("./Uploaded", Path.GetRandomFileName());
         Directory.CreateDirectory(tempDir);
 
         try
@@ -62,8 +69,7 @@ public class TestRunsController : ControllerBase
                 await file.CopyToAsync(stream);
             }
 
-            var tester = new MyTester();
-            TestRunResult testsResult = await tester.RunTestsFromDirectory(tempDir);
+            TestRunResult testsResult = await MyTester.RunTestsFromDirectory(Path.GetFullPath(tempDir));
 
             var testRun = new TestRun
             {
@@ -74,11 +80,13 @@ public class TestRunsController : ControllerBase
             _context.TestRuns.Add(testRun);
             await _context.SaveChangesAsync();
 
+            testsResult = null;
+
             return CreatedAtAction(nameof(GetTestRun), new { id = testRun.Id }, testRun);
         }
         finally
         {
-            Directory.Delete(tempDir, true);
+            //Directory.Delete(tempDir, recursive: true);
         }
     }
 

@@ -9,7 +9,7 @@ using System.Reflection;
 /// <summary>
 /// Class for running test classes.
 /// </summary>
-public class MyTester
+public static class MyTester
 {
     /// <summary>
     /// Runs test classes from assemblies from directory.
@@ -17,7 +17,7 @@ public class MyTester
     /// <param name="path">Path to the assemblies.</param>
     /// <returns>List of test classes results.</returns>
     /// <exception cref="DirectoryNotFoundException">Throws if directory not found.</exception>
-    public async Task<TestRunResult> RunTestsFromDirectory(string path)
+    public static async Task<TestRunResult> RunTestsFromDirectory(string path)
     {
         if (!Directory.Exists(path))
         {
@@ -33,9 +33,9 @@ public class MyTester
         var testRunResult = new TestRunResult([.. results]);
 
         return testRunResult;
-    }
+            }
 
-    public async Task<TestAssemblyResult> RunTestClasses(Assembly assembly)
+    public static async Task<TestAssemblyResult> RunTestClasses(Assembly assembly)
     {
         var testClassesInAssembly = assembly.GetTypes().Where(t => t.GetMethods().Any(m => m.GetCustomAttributes(typeof(MyTestAttribute), false).Length != 0));
 

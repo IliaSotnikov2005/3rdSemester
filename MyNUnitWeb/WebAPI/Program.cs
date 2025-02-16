@@ -13,12 +13,14 @@ builder.Services.AddDbContext<NUnitWebDbContext>(options =>
 options.UseSqlite(builder.Configuration.GetConnectionString("Database")));
 builder.Services.AddCors(options =>
 {
-    options.AddDefaultPolicy(policy =>
-    {
-        policy.AllowAnyOrigin();
-        policy.AllowAnyHeader();
-        policy.AllowAnyMethod();
-    });
+    options.AddPolicy(
+        "AllowAllOrigins",
+        builder =>
+        {
+            builder.AllowAnyOrigin()
+                   .AllowAnyMethod()
+                   .AllowAnyHeader();
+        });
 });
 
 var app = builder.Build();
@@ -34,6 +36,8 @@ app.UseHttpsRedirection();
 app.UseAuthorization();
 
 app.MapControllers();
+
+app.UseCors("AllowAllOrigins");
 
 app.Run();
 
