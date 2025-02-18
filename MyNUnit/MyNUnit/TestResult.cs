@@ -1,4 +1,4 @@
-// <copyright file="MyTestResult.cs" company="IlyaSotnikov">
+// <copyright file="TestResult.cs" company="IlyaSotnikov">
 // Copyright (c) IlyaSotnikov. All rights reserved.
 // </copyright>
 
@@ -13,7 +13,10 @@ namespace MyNUnit;
 /// <param name="TimeElapsed">Time elapsed by the test.</param>
 public record TestResult(string Name, TestStatus Status, string Message, TimeSpan TimeElapsed = default)
 {
-    public int Id { get; set; }
+    /// <summary>
+    /// Gets the id of test result.
+    /// </summary>
+    public int Id { get; init; }
 
     /// <summary>
     /// Gets the status of the test run.

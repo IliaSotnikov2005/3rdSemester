@@ -1,4 +1,4 @@
-// <copyright file="MyTestClassResults.cs" company="IlyaSotnikov">
+// <copyright file="TestClassResult.cs" company="IlyaSotnikov">
 // Copyright (c) IlyaSotnikov. All rights reserved.
 // </copyright>
 
@@ -9,23 +9,30 @@ namespace MyNUnit;
 /// </summary>
 public class TestClassResult
 {
-    private TestClassResult()
-    {
-    }
-
     /// <summary>
     /// Initializes a new instance of the <see cref="TestClassResult"/> class.
     /// </summary>
     /// <param name="results">List of test results.</param>
+    /// <param name="testClassName">The test class name.</param>
     public TestClassResult(string testClassName, List<TestResult> results)
     {
         this.TestClassName = testClassName;
         this.AddResults(results);
     }
 
-    public int Id { get; set; }
+    private TestClassResult()
+    {
+    }
 
-    public string TestClassName { get; init; }
+    /// <summary>
+    /// Gets the id of test class result.
+    /// </summary>
+    public int Id { get; init; }
+
+    /// <summary>
+    /// Gets the name of test class result.
+    /// </summary>
+    public string? TestClassName { get; init; }
 
     /// <summary>
     /// Gets the number of passed tests.

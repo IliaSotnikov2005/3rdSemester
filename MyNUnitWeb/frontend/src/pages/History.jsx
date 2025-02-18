@@ -12,7 +12,7 @@ import {
   Paper,
   CircularProgress,
 } from "@mui/material";
-import api from "../api"; // Импортируем API-клиент
+import api from "../api";
 
 const History = () => {
   const [testRuns, setTestRuns] = useState([]);
@@ -20,7 +20,6 @@ const History = () => {
   const [error, setError] = useState(null);
   const navigate = useNavigate();
 
-  // Загрузка данных о тестовых прогонах
   useEffect(() => {
     const fetchTestRuns = async () => {
       try {
@@ -61,7 +60,6 @@ const History = () => {
         Test History
       </Typography>
 
-      {/* Таблица с историей тестовых прогонов */}
       <TableContainer component={Paper}>
         <Table>
           <TableHead>
@@ -80,7 +78,7 @@ const History = () => {
                 key={testRun.id}
                 hover
                 style={{ cursor: "pointer" }}
-                onClick={() => navigate(`/result/${testRun.id}`)} // Переход на страницу результата
+                onClick={() => navigate(`/result/${testRun.id}`)}
               >
                 <TableCell>{testRun.id}</TableCell>
                 <TableCell>

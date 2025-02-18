@@ -35,7 +35,7 @@ public static class MyTester
         return testRunResult;
             }
 
-    public static async Task<TestAssemblyResult> RunTestClasses(Assembly assembly)
+    private static async Task<TestAssemblyResult> RunTestClasses(Assembly assembly)
     {
         var testClassesInAssembly = assembly.GetTypes().Where(t => t.GetMethods().Any(m => m.GetCustomAttributes(typeof(MyTestAttribute), false).Length != 0));
 
@@ -43,7 +43,7 @@ public static class MyTester
 
         var results = await Task.WhenAll(tasks);
 
-        return new TestAssemblyResult(assembly.GetName().Name, [.. results]);
+        return new TestAssemblyResult(assembly.GetName().Name!, [.. results]);
     }
 
     private static async Task<TestClassResult> RunTestClass(Type testClass)
