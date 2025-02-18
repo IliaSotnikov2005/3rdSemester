@@ -1,17 +1,16 @@
-﻿// <copyright file="NUnitTests.cs" company="IlyaSotnikov">
+﻿// <copyright file="MyNUnitTests.cs" company="IlyaSotnikov">
 // Copyright (c) IlyaSotnikov. All rights reserved.
 // </copyright>
 
-namespace NUnitTest;
+namespace MyNUnitTests;
 
 using MyNUnit;
-using NUnit;
 using NUnit.Framework;
 
 /// <summary>
 /// Tests for NUnit.
 /// </summary>
-public class NUnitTests
+public class MyNUnitTests
 {
     /// <summary>
     /// Checks that throws exception if path not exists.
@@ -45,13 +44,13 @@ public class NUnitTests
             {
                 for (int i = 0; i < testClass.TestResults.Count; ++i)
                 {
-                    Assert.That(this.Comparer(testClass.TestResults[i], expected[i]), Is.True);
+                    Assert.That(Comparer(testClass.TestResults[i], expected[i]), Is.True);
                 }
             }
         }
     }
 
-    private bool Comparer(TestResult actual, TestResult expected)
+    private static bool Comparer(TestResult actual, TestResult expected)
     {
         return actual.Name == expected.Name && actual.Message == expected.Message && actual.Status == expected.Status;
     }
