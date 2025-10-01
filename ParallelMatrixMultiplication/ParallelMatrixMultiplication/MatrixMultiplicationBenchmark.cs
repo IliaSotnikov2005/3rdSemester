@@ -35,7 +35,7 @@ public class MatrixMultiplicationBenchmark
         var parallelTimes = new double[runs];
 
         var sequentialMultiplier = new SequentialMultiplier();
-        var parallerMultiplier = new ParallelMultiplier();
+        var parallelMultiplier = new ParallelMultiplier();
 
         for (int i = 0; i < runs; ++i)
         {
@@ -45,7 +45,7 @@ public class MatrixMultiplicationBenchmark
             sequentialTimes[i] = stopwatch.Elapsed.TotalMilliseconds;
 
             stopwatch.Restart();
-            parallerMultiplier.Multiply(matrix1, matrix2);
+            parallelMultiplier.Multiply(matrix1, matrix2);
             stopwatch.Stop();
             parallelTimes[i] = stopwatch.Elapsed.TotalMilliseconds;
         }
