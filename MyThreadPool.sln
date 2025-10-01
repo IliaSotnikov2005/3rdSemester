@@ -1,0 +1,27 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "MyThreadPool", "MyThreadPool", "{0DB249A3-16EC-44BB-A026-8120EA40023D}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MyThreadPool", "MyThreadPool\MyThreadPool\MyThreadPool.csproj", "{A1B07772-D5F3-489F-AD0D-2C205C3CA780}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{A1B07772-D5F3-489F-AD0D-2C205C3CA780}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A1B07772-D5F3-489F-AD0D-2C205C3CA780}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A1B07772-D5F3-489F-AD0D-2C205C3CA780}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A1B07772-D5F3-489F-AD0D-2C205C3CA780}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{A1B07772-D5F3-489F-AD0D-2C205C3CA780} = {0DB249A3-16EC-44BB-A026-8120EA40023D}
+	EndGlobalSection
+EndGlobal
